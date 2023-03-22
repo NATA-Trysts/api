@@ -21,7 +21,7 @@ module.exports = {
 
 		JWT_SECRET: process.env.JWT_SECRET || 'jwt-conduit-secret',
 
-		fields: ['_id', 'username', 'email', 'handler'],
+		fields: ['_id', 'username', 'email', 'handler', 'token'],
 
 		entityValidator: {
 			username: { type: 'string', min: 2, max: 15 },
@@ -30,89 +30,17 @@ module.exports = {
 	},
 
 	actions: {
+		/**
+		 * create a new user
+		 *
+		 * @actions
+		 *
+		 * @param {Object} user - User entity
+		 *
+		 * @returns {Object} Created entity
+		 */
 		create: {
 			rest: 'POST /users',
-			params: {
-				user: { type: 'object' }, // { username, email }, handler is generated automatically
-			},
-			async handler(ctx) {
-				const entity = ctx.params.user
-				await this.validateEntity(entity)
-
-				if (entity.username) {
-					const found = await this.adapter.findOne({
-						username: entity.username,
-					})
-					if (found) {
-						throw new MoleculerClientError('Username is already taken!', 422, [
-							{
-								field: 'username',
-								message: 'is already taken',
-							},
-						])
-					}
-				}
-
-				if (entity.email) {
-					const found = await this.adapter.findOne({
-						email: entity.email,
-					})
-					if (found) {
-						throw new MoleculerClientError('Email is already exist!', 422, [
-							{
-								field: 'email',
-								message: 'is already exist',
-							},
-						])
-					}
-				}
-
-				entity.handler =
-					entity.username + '#' + Math.floor(1000 + Math.random() * 9000)
-
-				const doc = await this.adapter.insert(entity)
-				const user = await this.transformDocuments(ctx, {}, doc)
-				const json = await this.transformEntity(user, true)
-				await this.entityChanged('created', json, ctx)
-				return json
-			},
-		},
-
-		/**
-		 * Verify a user's email address.
-		 */
-		verifyOtp: {
-			rest: 'POST /verify',
-			params: {
-				code: { type: 'string' },
-				email: { type: 'string' },
-			},
-			async handler(ctx) {
-				this.verifyOtp(ctx.params.code, ctx.params.email)
-			},
-		},
-
-		list: {
-			rest: 'GET /users',
-			async handler(ctx) {
-				const query = ctx.params
-				const docs = await this.adapter.find(query)
-				const users = await this.transformDocuments(ctx, {}, docs)
-				return users.map((user) => this.transformEntity(user, false))
-			},
-		},
-
-		get: {
-			rest: 'GET /users/:id',
-			async handler(ctx) {
-				const doc = await this.adapter.findById(ctx.params.id)
-				const user = await this.transformDocuments(ctx, {}, doc)
-				return this.transformEntity(user, false)
-			},
-		},
-
-		update: {
-			rest: 'PUT /users/:id',
 			params: {
 				user: { type: 'object' },
 			},
@@ -124,13 +52,18 @@ module.exports = {
 					const found = await this.adapter.findOne({
 						username: entity.username,
 					})
-					if (found && found._id != ctx.params.id) {
-						throw new MoleculerClientError('Username is already taken!', 422, [
-							{
-								field: 'username',
-								message: 'is already taken',
-							},
-						])
+					if (found) {
+						throw new MoleculerClientError(
+							'Username is already taken!',
+							422,
+							'',
+							[
+								{
+									field: 'username',
+									message: 'is already taken',
+								},
+							]
+						)
 					}
 				}
 
@@ -138,8 +71,8 @@ module.exports = {
 					const found = await this.adapter.findOne({
 						email: entity.email,
 					})
-					if (found && found._id != ctx.params.id) {
-						throw new MoleculerClientError('Email is already exist!', 422, [
+					if (found) {
+						throw new MoleculerClientError('Email is already exist!', 422, '', [
 							{
 								field: 'email',
 								message: 'is already exist',
@@ -148,24 +81,80 @@ module.exports = {
 					}
 				}
 
-				const doc = await this.adapter.updateById(ctx.params.id, entity)
-				const user = await this.transformDocuments(ctx, {}, doc)
-				const json = await this.transformEntity(user, false)
-				await this.entityChanged('updated', json, ctx)
+				const json = await this.createNewUser(
+					entity.email,
+					entity.username,
+					ctx
+				)
 				return json
 			},
 		},
 
+		/**
+		 * Verify a user's email address.
+		 *
+		 * @actions
+		 * @param {String} email - User's email address
+		 * @param {String} code - Verification code
+		 *
+		 * @returns {Object} User entity
+		 */
+		verifyOtp: {
+			rest: 'POST /verify',
+			params: {
+				code: { type: 'string' },
+				email: { type: 'string' },
+			},
+			async handler(ctx) {
+				const { code, email } = ctx.params
+
+				const isVerified = await this.verifyOtp(email, code)
+
+				if (isVerified) {
+					// if email of user has in database, return user
+					// else create new user
+					const user = await this.adapter.findOne({ email })
+
+					if (user) {
+						return user
+					} else {
+						const entity = {
+							username: email,
+							email: email,
+						}
+
+						const json = await this.createNewUser(
+							entity.email,
+							entity.username,
+							ctx
+						)
+						return json
+					}
+				} else {
+					throw new MoleculerClientError('Invalid code', 422, '', [
+						{
+							field: 'code',
+							message: 'is invalid',
+						},
+					])
+				}
+			},
+		},
+
+		list: {
+			rest: 'GET /users',
+		},
+
+		get: {
+			rest: 'GET /users/:id',
+		},
+
+		update: {
+			rest: 'PUT /users/:id',
+		},
+
 		remove: {
 			rest: 'DELETE /users/:id',
-			async handler(ctx) {
-				const doc = await this.adapter.findById(ctx.params.id)
-				const user = await this.transformDocuments(ctx, {}, doc)
-				await this.adapter.removeById(ctx.params.id)
-				const json = await this.transformEntity(user, false)
-				await this.entityChanged('removed', json, ctx)
-				return json
-			},
 		},
 	},
 
@@ -198,8 +187,6 @@ module.exports = {
 		 */
 		transformEntity(user, withToken, token) {
 			if (user) {
-				//user.image = user.image || "https://www.gravatar.com/avatar/" + crypto.createHash("md5").update(user.email).digest("hex") + "?d=robohash";
-				user.image = user.image || ''
 				if (withToken) user.token = token || this.generateJWT(user)
 			}
 
@@ -207,36 +194,37 @@ module.exports = {
 		},
 
 		/**
-		 * Transform returned user entity as profile.
-		 *
-		 * @param {Context} ctx
-		 * @param {Object} user
-		 * @param {Object?} loggedInUser
-		 */
-		async transformProfile(ctx, user, loggedInUser) {
-			//user.image = user.image || "https://www.gravatar.com/avatar/" + crypto.createHash("md5").update(user.email).digest("hex") + "?d=robohash";
-			user.image =
-				user.image ||
-				'https://static.productionready.io/images/smiley-cyrus.jpg'
-
-			if (loggedInUser) {
-				const res = await ctx.call('follows.has', {
-					user: loggedInUser._id.toString(),
-					follow: user._id.toString(),
-				})
-				user.following = res
-			} else {
-				user.following = false
-			}
-
-			return { profile: user }
-		},
-
-		/**
 		 * Verify code from email
+		 *
+		 * @param {String} email
+		 * @param {String} code
 		 */
 		async verifyOtp(email, code) {
-			this.logger.warn('Verifying code', email, code)
+			// temporary
+			const emailAndCodeMapping = {
+				'sonha@gmail.com': '123456',
+				'tienthinh@gmail.com': '654321',
+			}
+
+			if (emailAndCodeMapping[email] === code) {
+				return true
+			} else {
+				return false
+			}
+		},
+
+		async createNewUser(email, username, ctx) {
+			const entity = {
+				username: username,
+				email: email,
+				handler: username + '#' + Math.floor(1000 + Math.random() * 9000),
+			}
+
+			const doc = await this.adapter.insert(entity)
+			const user = await this.transformDocuments(ctx, {}, doc)
+			const json = await this.transformEntity(user, true)
+			await this.entityChanged('created', json, ctx)
+			return json
 		},
 	},
 }
