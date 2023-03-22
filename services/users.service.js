@@ -2,7 +2,6 @@
 
 const { MoleculerClientError } = require('moleculer').Errors
 
-const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 
 const DbService = require('../mixins/db.mixin')
