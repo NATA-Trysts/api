@@ -3,6 +3,10 @@
 		<meta charset="UTF-8" />
 		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<!--Dark Mode meta tags needed to enable Dark Mode in email client user agents-->
+		<meta name="color-scheme" content="light dark" />
+		<meta name="supported-color-schemes" content="light dark only" />
+
 		<style>
 			@font-face {
 				font-family: 'GeneralSans-Variable';
@@ -13,8 +17,14 @@
 				font-style: normal;
 			}
 
+			:root {
+				color-scheme: light dark;
+				supported-color-schemes: light dark;
+			}
+
 			body {
 				width: fit-content;
+				margin: 0 auto;
 				font-family: 'GeneralSans-Variable', sans-serif !important;
 			}
 
@@ -158,6 +168,16 @@
 				color: hsla(0, 0%, 92%, 1);
 			}
 
+			@media (prefers-color-scheme: dark) {
+				.otp-box {
+					background-color: hsla(0, 0%, 92%, 1);
+				}
+
+				.otp-text {
+					color: hsla(261, 92%, 5%, 1);
+				}
+			}
+
 			.line {
 				padding-bottom: 20px;
 			}
@@ -234,17 +254,12 @@
 							<table>
 								<tr>
 									<td class="header-text">
-										<span class="bolder-text"
-											>Woohoo, can’t wait to see you 😆</span
-										>
+										<span class="bolder-text">{{header}}</span>
 									</td>
 								</tr>
 								<tr>
 									<td class="content-text-1">
-										<span class="text"
-											>Just one more step before jump into Trysts, feel free to
-											use the lucky number below to start with us.</span
-										>
+										<span class="text">{{firstLine}}</span>
 									</td>
 								</tr>
 								<tr>
@@ -278,7 +293,7 @@
 									<td class="content-text-3">
 										<span class="text"
 											>Have no idea why you received this email?<br />
-											Just ignore it, some time Jane comes across our
+											Just ignore it, some time Kui Pap comes across our
 											keyboard.<br />
 											Say hi to Kui Pap 😼</span
 										>
@@ -288,7 +303,7 @@
 									<td>
 										<img
 											class="image"
-											src="https://raw.githubusercontent.com/huutinhlg2d/cdn/main/assets/kuipap.png"
+											src="https://raw.githubusercontent.com/huutinhlg2d/cdn/main/assets/kuipap2.png"
 											alt="footer"
 										/>
 									</td>
@@ -298,32 +313,6 @@
 					</td>
 				</tr>
 			</tbody>
-			<!-- <main>
-				<article>
-					<h1 class="text">Woohoo, can’t wait to see you 😆</h1>
-					<span class="text"
-						>Just one more step before jump into Trysts, feel free to use the
-						lucky number below to start with us</span
-					>
-					<span class="text"> Your code 👇 </span>
-					<section class="code">
-						<span class="code-text" id="code-text">{{otp}}</span>
-					</section>
-					<div class="line-container"><span class="line"></span></div>
-					<span class="text text-center"
-						>Have no idea why you received this email?<br />
-						Just ignore it, some time Jane comes across our keyboard.<br />
-						Say hi to Jane 😼</span
-					>
-				</article>
-				<figure>
-					<img
-						class="image"
-						src="https://raw.githubusercontent.com/NATA-Trysts/app/main/src/components/EmailTemplate/email-template.webp"
-						alt="footer"
-					/>
-				</figure>
-			</main> -->
 		</table>
 	</body>
 </html>
