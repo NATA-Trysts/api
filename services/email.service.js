@@ -40,7 +40,7 @@ module.exports = {
 				const __dirname = path.resolve()
 				const filePath = path.join(
 					__dirname,
-					'./assets/email-template/otp2.html'
+					'./assets/email-template/otp.html'
 				)
 				const source = fs.readFileSync(filePath, 'utf-8').toString()
 				const template = handlebars.compile(source)
