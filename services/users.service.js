@@ -209,6 +209,7 @@ module.exports = {
 							)
 						} else {
 							user = await this.adapter.updateById(user._id, {
+								...user,
 								accessToken,
 								refreshToken,
 							})
@@ -231,11 +232,49 @@ module.exports = {
 			},
 		},
 
+		/**
+		 * Get user by JWT token (for API GW authentication)
+		 *
+		 * @actions
+		 * @param {String} token - JWT token
+		 *
+		 * @returns {Object} Resolved user
+		 */
+		resolveToken: {
+			params: {
+				token: 'string',
+			},
+			async handler(ctx) {
+				const decoded = await new this.Promise((resolve, reject) => {
+					jwt.verify(
+						ctx.params.token,
+						this.settings.JWT_SECRET,
+						(err, decoded) => {
+							if (err) {
+								return reject(err)
+							}
+
+							resolve(decoded)
+						}
+					)
+				})
+
+				if (decoded.email) {
+					const user = await this.adapter.findOne({
+						email: decoded.email,
+					})
+
+					if (user) return user
+				}
+			},
+		},
+
 		list: {
 			rest: 'GET /users',
 		},
 
 		get: {
+			auth: 'required', // FOR TESTING PURPOSES ONLY
 			rest: 'GET /users/:id',
 		},
 
