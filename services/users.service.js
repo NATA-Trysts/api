@@ -269,6 +269,68 @@ module.exports = {
 			},
 		},
 
+		/**
+		 * Refresh JWT token
+		 *
+		 * @actions
+		 * @param {String} refreshToken - Refresh token
+		 *
+		 * @returns {Object} accessToken - JWT access token
+		 * @returns {Object} refreshToken - JWT refresh token
+		 *
+		 * @throws {MoleculerClientError} - If refresh token is invalid
+		 */
+		retrieveAccessToken: {
+			rest: 'GET /refresh',
+			params: {
+				refreshToken: 'string',
+			},
+			async handler(ctx) {
+				const { refreshToken } = ctx.params
+
+				try {
+					const decodedRefreshToken = jwt.verify(
+						refreshToken,
+						this.settings.JWT_SECRET
+					)
+					const { email } = decodedRefreshToken
+
+					const user = await this.adapter.findOne({
+						email,
+					})
+
+					if (user.refreshToken !== refreshToken) {
+						throw new MoleculerClientError('Invalid refresh token', 422, '', [
+							{
+								field: 'refreshToken',
+								message: 'is invalid',
+							},
+						])
+					} else {
+						const { accessToken, refreshToken } = await this.generateJWT(email)
+
+						await this.adapter.updateById(user._id, {
+							...user,
+							accessToken,
+							refreshToken,
+						})
+
+						return {
+							accessToken,
+							refreshToken,
+						}
+					}
+				} catch (err) {
+					throw new MoleculerClientError('Invalid refresh token', 422, '', [
+						{
+							field: 'refreshToken',
+							message: 'is invalid',
+						},
+					])
+				}
+			},
+		},
+
 		list: {
 			rest: 'GET /users',
 		},
@@ -297,7 +359,7 @@ module.exports = {
 			const payload = { email }
 
 			const accessToken = jwt.sign(payload, this.settings.JWT_SECRET, {
-				expiresIn: '30m',
+				expiresIn: '5m',
 			})
 
 			const refreshToken = jwt.sign(payload, this.settings.JWT_SECRET, {
