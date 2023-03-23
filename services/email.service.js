@@ -25,15 +25,16 @@ module.exports = {
 			rest: 'POST /',
 			params: {
 				to: 'string',
+				otp: 'string',
 			},
 			async handler(ctx) {
-				return this.send(ctx.params.to)
+				return this.send(ctx.params.to, ctx.params.otp)
 			},
 		},
 	},
 
 	methods: {
-		async send(to) {
+		async send(to, otp) {
 			return new this.Promise((resolve, reject) => {
 				this.logger.debug(`Sending email to ${to} '...`)
 
@@ -44,9 +45,7 @@ module.exports = {
 				)
 				const source = fs.readFileSync(filePath, 'utf-8').toString()
 				const template = handlebars.compile(source)
-				const replacements = {
-					otp: '111111',
-				}
+				const replacements = { otp }
 				const htmlToSend = template(replacements)
 
 				let mailOptions = {
@@ -86,4 +85,3 @@ module.exports = {
 		this.transporter = nodemailer.createTransport(this.settings.transport)
 	},
 }
-
