@@ -5,6 +5,8 @@ const nodemailer = require('nodemailer')
 const path = require('path')
 const fs = require('fs')
 const handlebars = require('handlebars')
+const otpGenerator = require('otp-generator')
+const crypto = require('crypto')
 
 module.exports = {
 	name: 'email',
@@ -17,6 +19,26 @@ module.exports = {
 				user: 'trystsplatform@gmail.com',
 				pass: 'ffwlkwaialrtbsoz',
 			},
+			email: {
+				otp: {
+					headers: [
+						'Woohoo, can’t wait to see you 😆',
+						"It's Trystsin' time! 😮",
+						'Test1',
+						'Test2',
+						'Test3',
+					],
+					firstLines: [
+						'Just one more step before jump into Trysts, feel free to use the lucky number below to start with us.',
+						"The following magic number will lead you one step closer to Trysts, but remind yourself before you decide. You don't know what's coming (it will be fun).",
+						'Test1',
+						'Test2',
+						'Test3',
+						'Test4',
+						'Test5',
+					],
+				},
+			},
 		},
 	},
 
@@ -27,13 +49,13 @@ module.exports = {
 				to: 'string',
 			},
 			async handler(ctx) {
-				return this.send(ctx.params.to)
+				return this.send(ctx.params.to, ctx)
 			},
 		},
 	},
 
 	methods: {
-		async send(to) {
+		async send(to, ctx) {
 			return new this.Promise((resolve, reject) => {
 				this.logger.debug(`Sending email to ${to} '...`)
 
@@ -44,8 +66,25 @@ module.exports = {
 				)
 				const source = fs.readFileSync(filePath, 'utf-8').toString()
 				const template = handlebars.compile(source)
+				const otp = otpGenerator.generate(6, {
+					lowerCaseAlphabets: false,
+					upperCaseAlphabets: false,
+					specialChars: false,
+				})
+
+				const otpReplacements = this.settings.transport.email.otp
+				const header =
+					otpReplacements.headers[
+						crypto.randomInt(otpReplacements.headers.length)
+					]
+				const firstLine =
+					otpReplacements.firstLines[
+						crypto.randomInt(otpReplacements.firstLines.length)
+					]
 				const replacements = {
-					otp: '111111',
+					otp: otp,
+					header: header,
+					firstLine: firstLine,
 				}
 				const htmlToSend = template(replacements)
 
