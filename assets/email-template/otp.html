@@ -5,28 +5,36 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<style>
 			@font-face {
-				font-family: "GeneralSans-Variable";
-				src: url("https://raw.githubusercontent.com/NATA-Trysts/app/a29e8641f1413fab9686900ce368eb078fb06dcf/src/assets/fonts/GeneralSans-Variable.woff2")
-					format("woff2");
+				font-family: 'GeneralSans-Variable';
+				src: url('https://raw.githubusercontent.com/NATA-Trysts/app/a29e8641f1413fab9686900ce368eb078fb06dcf/src/assets/fonts/GeneralSans-Variable.woff2')
+					format('woff2');
 				font-weight: 200 700;
 				font-display: swap;
 				font-style: normal;
 			}
 
 			body {
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				font-family: "GeneralSans-Variable", sans-serif !important;
+				width: fit-content;
+				font-family: 'GeneralSans-Variable', sans-serif !important;
 			}
 
-			body button {
-				border-width: 0px;
-				background-color: transparent;
+			table {
+				width: 100%;
+			}
+
+			table,
+			td {
+				vertical-align: top;
+				border-spacing: 0;
+			}
+
+			td,
+			tr {
+				padding: 0;
+				border-collapse: collapse;
 			}
 
 			.content {
-				box-sizing: border-box;
 				width: 600px;
 				height: 834px;
 				border: 1px solid hsla(0, 0%, 86%, 1);
@@ -34,54 +42,42 @@
 				overflow: hidden;
 			}
 
-			header {
+			.header {
+				box-sizing: border-box;
 				height: 172px;
-				background-color: blue;
 				position: relative;
 				background-color: hsla(225, 10%, 8%, 1);
+				padding: 48px 24px 48px 54px;
 			}
 
-			header .logo {
+			.logo {
 				width: 129px;
-				display: flex;
-				position: absolute;
-				top: 48px;
-				left: 54px;
-				aspect-ratio: 65/19;
+				height: 35px;
+				object-fit: cover;
 			}
 
-			header .logo::before {
-				content: "";
-				width: 37.707692307692305px;
-				aspect-ratio: 19/12;
+			.redirect {
+			}
+
+			.redirect-link {
+				height: 19px;
+			}
+
+			.redirect-icon {
+				padding: 6px 0px 5px 6px;
+			}
+
+			.redirect-button {
 				display: block;
-				position: absolute;
-				top: 33.33%;
-				left: 10%;
-				background: linear-gradient(
-					90deg,
-					rgba(255, 147, 138, 0.6) 1.24%,
-					rgba(255, 110, 136, 0.6) 42.49%
-				);
-				filter: blur(14.163088615384616px);
-			}
-
-			header .redirect {
-				position: absolute;
-				top: 50px;
-				right: 34px;
-			}
-
-			header .redirect-button {
-				display: flex;
-				padding: 8px 12px 6px 12px;
+				background-color: transparent;
+				border-width: 0;
+				margin-left: auto;
+				padding: 8px 20px;
 				border-radius: 11.4px;
-				justify-content: center;
-				align-items: center;
-				gap: 6px;
 			}
 
-			header .redirect-button a {
+			.redirect-button a {
+				height: 19px;
 				color: #ffffff;
 				font-style: normal;
 				font-weight: 600;
@@ -90,19 +86,19 @@
 				text-decoration: none;
 			}
 
-			header .redirect-button:hover {
+			.redirect-button:hover {
 				background-color: #ffffff;
 			}
 
-			header .redirect-button:hover a {
+			.redirect-button:hover a {
 				color: hsla(225, 10%, 8%, 1);
 			}
 
-			header .redirect-button:hover svg {
+			.redirect-button:hover svg {
 				stroke: hsla(225, 10%, 8%, 1);
 			}
 
-			main {
+			.main {
 				box-sizing: border-box;
 				height: 662px;
 				padding: 28px 54px 37px;
@@ -110,190 +106,250 @@
 				position: relative;
 			}
 
-			h1.text {
-				margin: 0 0 24px 0;
+			.text {
+				font-style: normal;
+				font-weight: 500;
+				font-size: 16px;
+				line-height: 22px;
+				color: hsla(0, 0%, 34%, 1);
+			}
+
+			.bolder-text {
 				font-style: normal;
 				font-weight: 600;
 				font-size: 18px;
 				line-height: 24px;
 			}
 
-			span {
-				display: block;
+			.header-text {
+				padding-bottom: 24px;
 			}
 
-			span.text {
-				margin: 0 0 12px 0;
-				font-weight: 500;
-				font-size: 16px;
-				line-height: 22px;
-				color: hsla(0, 1%, 54%, 1);
+			.content-text-1 {
+				padding-bottom: 12px;
 			}
 
-			span.text.text-center {
+			.content-text-2 {
+				padding-bottom: 16px;
+			}
+
+			.content-text-3 {
+				padding-bottom: 18px;
 				text-align: center;
 			}
 
-			section.code {
-				margin-top: 4px;
+			.otp {
+				padding-bottom: 60px;
+			}
+
+			.otp-box {
 				height: 145px;
-				background-color: hsla(225, 10%, 8%, 1);
+				background-color: hsla(261, 92%, 5%, 1);
 				border-radius: 17.4775px;
 			}
 
-			span.code-text {
-				height: 100%;
-				display: flex;
-				justify-content: center;
-				align-items: center;
+			.otp-text {
+				width: 300px;
+				padding: 32px 96px;
+				text-align: center;
 				font-weight: 600;
 				font-size: 60px;
 				line-height: 81px;
 				color: hsla(0, 0%, 92%, 1);
 			}
 
-			section.copy {
-				height: 120px;
-				width: 100%;
-				position: relative;
+			.line {
+				padding-bottom: 20px;
 			}
 
-			button {
-				/* transition: all 0.25s ease; */
-				pointer-events: all;
-				cursor: pointer;
-			}
-
-			button.copy-button {
-				position: absolute;
-				top: 24px;
-				left: 181px;
-
-				text-align: center;
-				width: 130px;
-				height: 42px;
-				font-weight: 600;
-				font-size: 16px;
-				line-height: 22px;
-				color: #ffffff;
-				background: linear-gradient(
-					85.46deg,
-					#a67bc2 0%,
-					#c771e1 50.52%,
-					#e9a8fa 100%
-				);
-				border-radius: 12px;
-			}
-
-			button.copy-button:hover {
-				background: linear-gradient(
-					85.46deg,
-					#b481d5 0%,
-					#ce67ed 50.52%,
-					#e88fff 100%
-				);
-				box-shadow: 0px 41px 89px rgba(234, 42, 210, 0.44),
-					0px 15.7926px 28.3481px rgba(234, 42, 210, 0.267259),
-					0px 3.34074px 7.25185px rgba(234, 42, 210, 0.172741);
-			}
-
-			div.line-container {
-				height: 1px;
-				margin: 60px 0 20px;
-			}
-
-			span.line {
+			.line-stroke {
 				width: 279px;
+				margin: 0 auto;
 				border: 1px solid hsla(0, 0%, 88%, 1);
-				position: absolute;
-				left: 50%;
-				transform: translateX(-50%);
 			}
 
-			figure {
-				margin: 0;
-			}
-
-			figure .image {
+			.image {
 				height: 143px;
 				object-fit: cover;
 			}
 		</style>
 	</head>
 	<body>
-		<div class="content">
-			<header>
-				<div class="logo">
-					<svg
-						width="129"
-						height="35"
-						viewBox="0 0 129 35"
-						fill="none"
-						xmlns="http://www.w3.org/2000/svg"
-					>
-						<path
-							d="M41.04 27.5371V7.7898H34.3232V3.49107H52.2906V7.7898H45.5738V27.5371H41.04Z"
-							fill="white"
-						/>
-						<path
-							d="M52.9769 11.081H57.1078V13.3647H57.3764C57.5779 12.9617 57.8466 12.5923 58.1824 12.2564C58.5183 11.9206 58.8877 11.6295 59.2907 11.3833C59.7161 11.137 60.1639 10.9467 60.6341 10.8123C61.1266 10.678 61.608 10.6108 62.0782 10.6108C62.6603 10.6108 63.1528 10.6668 63.5558 10.7788C63.9812 10.8907 64.3395 11.0362 64.6305 11.2153L63.4551 15.2118C63.1864 15.0775 62.8842 14.9767 62.5483 14.9096C62.2349 14.82 61.8431 14.7752 61.3729 14.7752C60.7684 14.7752 60.2199 14.8984 59.7273 15.1447C59.2347 15.3685 58.8093 15.6932 58.4511 16.1186C58.1153 16.544 57.8466 17.0477 57.6451 17.6299C57.466 18.1896 57.3764 18.8053 57.3764 19.477V27.5371H52.9769V11.081Z"
-							fill="white"
-						/>
-						<path
-							d="M72.153 26.7311L65.2348 11.081H70.2388L74.4031 21.0554H74.6382L78.6347 11.081H83.5379L73.2277 34.7912H68.4924L72.153 26.7311Z"
-							fill="white"
-						/>
-						<path
-							d="M91.7313 28.0744C90.6567 28.0744 89.6939 27.9401 88.8431 27.6714C88.0147 27.4027 87.2871 27.0557 86.6602 26.6303C86.0557 26.1825 85.5407 25.6788 85.1153 25.119C84.6899 24.5369 84.3653 23.9548 84.1414 23.3727L88.0707 21.6935C88.4513 22.5443 88.9551 23.1824 89.582 23.6078C90.2313 24.0108 90.9477 24.2123 91.7313 24.2123C92.5374 24.2123 93.1754 24.0667 93.6456 23.7757C94.1158 23.4846 94.3509 23.1376 94.3509 22.7346C94.3509 22.2868 94.1494 21.9286 93.7464 21.6599C93.3657 21.3688 92.6941 21.1114 91.7313 20.8875L89.4141 20.3837C88.8991 20.2718 88.3618 20.0927 87.802 19.8464C87.2647 19.6001 86.7721 19.2867 86.3243 18.906C85.8766 18.5254 85.5071 18.0664 85.2161 17.5291C84.925 16.9918 84.7795 16.3649 84.7795 15.6484C84.7795 14.8424 84.9474 14.1259 85.2832 13.499C85.6415 12.8721 86.1228 12.346 86.7274 11.9206C87.3319 11.4728 88.0371 11.137 88.8431 10.9131C89.6715 10.6668 90.5559 10.5437 91.4963 10.5437C93.0635 10.5437 94.4628 10.8571 95.6942 11.484C96.9256 12.0885 97.8324 13.0625 98.4145 14.4058L94.6195 15.9507C94.3061 15.3014 93.8471 14.8312 93.2426 14.5401C92.6381 14.2491 92.0336 14.1036 91.4291 14.1036C90.8022 14.1036 90.2536 14.2379 89.7835 14.5066C89.3133 14.7528 89.0782 15.0775 89.0782 15.4805C89.0782 15.8611 89.2685 16.1634 89.6491 16.3873C90.0521 16.6111 90.5895 16.8126 91.2612 16.9918L93.7799 17.5963C95.4591 17.9993 96.7017 18.6486 97.5078 19.5441C98.3362 20.4173 98.7504 21.4584 98.7504 22.6674C98.7504 23.3839 98.5824 24.0667 98.2466 24.716C97.9108 25.3653 97.4294 25.9474 96.8025 26.4624C96.198 26.955 95.4591 27.3468 94.586 27.6378C93.7352 27.9289 92.7836 28.0744 91.7313 28.0744Z"
-							fill="white"
-						/>
-						<path
-							d="M103.1 14.8424H100.212V11.081H103.1V6.04344H107.499V11.081H111.53V14.8424H107.499V21.2233C107.499 21.6039 107.533 21.9622 107.6 22.298C107.69 22.6114 107.846 22.8801 108.07 23.104C108.384 23.4622 108.832 23.6414 109.414 23.6414C109.794 23.6414 110.097 23.6078 110.32 23.5406C110.544 23.451 110.757 23.3391 110.959 23.2048L112.201 27.0669C111.686 27.3132 111.127 27.4923 110.522 27.6042C109.94 27.7386 109.291 27.8057 108.574 27.8057C107.746 27.8057 106.996 27.6826 106.324 27.4363C105.675 27.1677 105.126 26.8094 104.678 26.3616C103.626 25.3541 103.1 23.9212 103.1 22.0629V14.8424Z"
-							fill="white"
-						/>
-						<path
-							d="M121.609 28.0744C120.534 28.0744 119.572 27.9401 118.721 27.6714C117.892 27.4027 117.165 27.0557 116.538 26.6303C115.933 26.1825 115.418 25.6788 114.993 25.119C114.568 24.5369 114.243 23.9548 114.019 23.3727L117.948 21.6935C118.329 22.5443 118.833 23.1824 119.46 23.6078C120.109 24.0108 120.825 24.2123 121.609 24.2123C122.415 24.2123 123.053 24.0667 123.523 23.7757C123.994 23.4846 124.229 23.1376 124.229 22.7346C124.229 22.2868 124.027 21.9286 123.624 21.6599C123.244 21.3688 122.572 21.1114 121.609 20.8875L119.292 20.3837C118.777 20.2718 118.24 20.0927 117.68 19.8464C117.142 19.6001 116.65 19.2867 116.202 18.906C115.754 18.5254 115.385 18.0664 115.094 17.5291C114.803 16.9918 114.657 16.3649 114.657 15.6484C114.657 14.8424 114.825 14.1259 115.161 13.499C115.519 12.8721 116.001 12.346 116.605 11.9206C117.21 11.4728 117.915 11.137 118.721 10.9131C119.549 10.6668 120.434 10.5437 121.374 10.5437C122.941 10.5437 124.341 10.8571 125.572 11.484C126.803 12.0885 127.71 13.0625 128.292 14.4058L124.497 15.9507C124.184 15.3014 123.725 14.8312 123.12 14.5401C122.516 14.2491 121.911 14.1036 121.307 14.1036C120.68 14.1036 120.131 14.2379 119.661 14.5066C119.191 14.7528 118.956 15.0775 118.956 15.4805C118.956 15.8611 119.146 16.1634 119.527 16.3873C119.93 16.6111 120.467 16.8126 121.139 16.9918L123.658 17.5963C125.337 17.9993 126.58 18.6486 127.386 19.5441C128.214 20.4173 128.628 21.4584 128.628 22.6674C128.628 23.3839 128.46 24.0667 128.124 24.716C127.789 25.3653 127.307 25.9474 126.68 26.4624C126.076 26.955 125.337 27.3468 124.464 27.6378C123.613 27.9289 122.661 28.0744 121.609 28.0744Z"
-							fill="white"
-						/>
-						<path
-							d="M19.326 4.67465L20.7894 6.1381C25.8456 11.1943 25.8456 19.3921 20.7894 24.4483L19.326 25.9118C17.0986 28.1391 13.4873 28.1391 11.26 25.9118L4.67442 19.3262C2.44705 17.0989 2.44705 13.4876 4.67441 11.2602L11.26 4.67466C13.4873 2.44729 17.0986 2.44729 19.326 4.67465Z"
-							stroke="url(#paint0_linear_0_1)"
-							stroke-width="5.15007"
-						/>
-						<defs>
-							<linearGradient
-								id="paint0_linear_0_1"
-								x1="28.6234"
-								y1="15.2955"
-								x2="-3.00058"
-								y2="15.2955"
-								gradientUnits="userSpaceOnUse"
-							>
-								<stop stop-color="#FF91A5" />
-								<stop offset="0.53125" stop-color="#FF6F88" />
-								<stop offset="1" stop-color="#FF938A" />
-							</linearGradient>
-						</defs>
-					</svg>
-				</div>
-				<section class="redirect">
-					<button class="redirect-button">
-						<a href="http://127.0.0.1:5173/dashboard" target="_blank"
-							>Go to Trysts</a
-						><svg
-							width="8"
-							height="8"
-							viewBox="0 0 10 10"
-							stroke="white"
-							fill="none"
-							xmlns="http://www.w3.org/2000/svg"
-						>
-							<path d="M1 1H9M9 1V9M9 1L1 9" stroke-width="1.5" />
-						</svg>
-					</button>
-				</section>
-			</header>
-			<main>
+		<table class="content">
+			<tbody>
+				<tr>
+					<td class="header">
+						<table>
+							<tr>
+								<td>
+									<img
+										class="logo"
+										src="https://raw.githubusercontent.com/huutinhlg2d/cdn/main/assets/trysts-logo.png"
+										alt="trysts-logo"
+									/>
+									<!-- <svg
+										width="129"
+										height="35"
+										viewBox="0 0 129 35"
+										fill="none"
+										xmlns="http://www.w3.org/2000/svg"
+									>
+										<path
+											d="M41.04 27.5371V7.7898H34.3232V3.49107H52.2906V7.7898H45.5738V27.5371H41.04Z"
+											fill="white"
+										/>
+										<path
+											d="M52.9769 11.081H57.1078V13.3647H57.3764C57.5779 12.9617 57.8466 12.5923 58.1824 12.2564C58.5183 11.9206 58.8877 11.6295 59.2907 11.3833C59.7161 11.137 60.1639 10.9467 60.6341 10.8123C61.1266 10.678 61.608 10.6108 62.0782 10.6108C62.6603 10.6108 63.1528 10.6668 63.5558 10.7788C63.9812 10.8907 64.3395 11.0362 64.6305 11.2153L63.4551 15.2118C63.1864 15.0775 62.8842 14.9767 62.5483 14.9096C62.2349 14.82 61.8431 14.7752 61.3729 14.7752C60.7684 14.7752 60.2199 14.8984 59.7273 15.1447C59.2347 15.3685 58.8093 15.6932 58.4511 16.1186C58.1153 16.544 57.8466 17.0477 57.6451 17.6299C57.466 18.1896 57.3764 18.8053 57.3764 19.477V27.5371H52.9769V11.081Z"
+											fill="white"
+										/>
+										<path
+											d="M72.153 26.7311L65.2348 11.081H70.2388L74.4031 21.0554H74.6382L78.6347 11.081H83.5379L73.2277 34.7912H68.4924L72.153 26.7311Z"
+											fill="white"
+										/>
+										<path
+											d="M91.7313 28.0744C90.6567 28.0744 89.6939 27.9401 88.8431 27.6714C88.0147 27.4027 87.2871 27.0557 86.6602 26.6303C86.0557 26.1825 85.5407 25.6788 85.1153 25.119C84.6899 24.5369 84.3653 23.9548 84.1414 23.3727L88.0707 21.6935C88.4513 22.5443 88.9551 23.1824 89.582 23.6078C90.2313 24.0108 90.9477 24.2123 91.7313 24.2123C92.5374 24.2123 93.1754 24.0667 93.6456 23.7757C94.1158 23.4846 94.3509 23.1376 94.3509 22.7346C94.3509 22.2868 94.1494 21.9286 93.7464 21.6599C93.3657 21.3688 92.6941 21.1114 91.7313 20.8875L89.4141 20.3837C88.8991 20.2718 88.3618 20.0927 87.802 19.8464C87.2647 19.6001 86.7721 19.2867 86.3243 18.906C85.8766 18.5254 85.5071 18.0664 85.2161 17.5291C84.925 16.9918 84.7795 16.3649 84.7795 15.6484C84.7795 14.8424 84.9474 14.1259 85.2832 13.499C85.6415 12.8721 86.1228 12.346 86.7274 11.9206C87.3319 11.4728 88.0371 11.137 88.8431 10.9131C89.6715 10.6668 90.5559 10.5437 91.4963 10.5437C93.0635 10.5437 94.4628 10.8571 95.6942 11.484C96.9256 12.0885 97.8324 13.0625 98.4145 14.4058L94.6195 15.9507C94.3061 15.3014 93.8471 14.8312 93.2426 14.5401C92.6381 14.2491 92.0336 14.1036 91.4291 14.1036C90.8022 14.1036 90.2536 14.2379 89.7835 14.5066C89.3133 14.7528 89.0782 15.0775 89.0782 15.4805C89.0782 15.8611 89.2685 16.1634 89.6491 16.3873C90.0521 16.6111 90.5895 16.8126 91.2612 16.9918L93.7799 17.5963C95.4591 17.9993 96.7017 18.6486 97.5078 19.5441C98.3362 20.4173 98.7504 21.4584 98.7504 22.6674C98.7504 23.3839 98.5824 24.0667 98.2466 24.716C97.9108 25.3653 97.4294 25.9474 96.8025 26.4624C96.198 26.955 95.4591 27.3468 94.586 27.6378C93.7352 27.9289 92.7836 28.0744 91.7313 28.0744Z"
+											fill="white"
+										/>
+										<path
+											d="M103.1 14.8424H100.212V11.081H103.1V6.04344H107.499V11.081H111.53V14.8424H107.499V21.2233C107.499 21.6039 107.533 21.9622 107.6 22.298C107.69 22.6114 107.846 22.8801 108.07 23.104C108.384 23.4622 108.832 23.6414 109.414 23.6414C109.794 23.6414 110.097 23.6078 110.32 23.5406C110.544 23.451 110.757 23.3391 110.959 23.2048L112.201 27.0669C111.686 27.3132 111.127 27.4923 110.522 27.6042C109.94 27.7386 109.291 27.8057 108.574 27.8057C107.746 27.8057 106.996 27.6826 106.324 27.4363C105.675 27.1677 105.126 26.8094 104.678 26.3616C103.626 25.3541 103.1 23.9212 103.1 22.0629V14.8424Z"
+											fill="white"
+										/>
+										<path
+											d="M121.609 28.0744C120.534 28.0744 119.572 27.9401 118.721 27.6714C117.892 27.4027 117.165 27.0557 116.538 26.6303C115.933 26.1825 115.418 25.6788 114.993 25.119C114.568 24.5369 114.243 23.9548 114.019 23.3727L117.948 21.6935C118.329 22.5443 118.833 23.1824 119.46 23.6078C120.109 24.0108 120.825 24.2123 121.609 24.2123C122.415 24.2123 123.053 24.0667 123.523 23.7757C123.994 23.4846 124.229 23.1376 124.229 22.7346C124.229 22.2868 124.027 21.9286 123.624 21.6599C123.244 21.3688 122.572 21.1114 121.609 20.8875L119.292 20.3837C118.777 20.2718 118.24 20.0927 117.68 19.8464C117.142 19.6001 116.65 19.2867 116.202 18.906C115.754 18.5254 115.385 18.0664 115.094 17.5291C114.803 16.9918 114.657 16.3649 114.657 15.6484C114.657 14.8424 114.825 14.1259 115.161 13.499C115.519 12.8721 116.001 12.346 116.605 11.9206C117.21 11.4728 117.915 11.137 118.721 10.9131C119.549 10.6668 120.434 10.5437 121.374 10.5437C122.941 10.5437 124.341 10.8571 125.572 11.484C126.803 12.0885 127.71 13.0625 128.292 14.4058L124.497 15.9507C124.184 15.3014 123.725 14.8312 123.12 14.5401C122.516 14.2491 121.911 14.1036 121.307 14.1036C120.68 14.1036 120.131 14.2379 119.661 14.5066C119.191 14.7528 118.956 15.0775 118.956 15.4805C118.956 15.8611 119.146 16.1634 119.527 16.3873C119.93 16.6111 120.467 16.8126 121.139 16.9918L123.658 17.5963C125.337 17.9993 126.58 18.6486 127.386 19.5441C128.214 20.4173 128.628 21.4584 128.628 22.6674C128.628 23.3839 128.46 24.0667 128.124 24.716C127.789 25.3653 127.307 25.9474 126.68 26.4624C126.076 26.955 125.337 27.3468 124.464 27.6378C123.613 27.9289 122.661 28.0744 121.609 28.0744Z"
+											fill="white"
+										/>
+										<path
+											d="M19.326 4.67465L20.7894 6.1381C25.8456 11.1943 25.8456 19.3921 20.7894 24.4483L19.326 25.9118C17.0986 28.1391 13.4873 28.1391 11.26 25.9118L4.67442 19.3262C2.44705 17.0989 2.44705 13.4876 4.67441 11.2602L11.26 4.67466C13.4873 2.44729 17.0986 2.44729 19.326 4.67465Z"
+											stroke="url(#paint0_linear_0_1)"
+											stroke-width="5.15007"
+										/>
+										<defs>
+											<linearGradient
+												id="paint0_linear_0_1"
+												x1="28.6234"
+												y1="15.2955"
+												x2="-3.00058"
+												y2="15.2955"
+												gradientUnits="userSpaceOnUse"
+											>
+												<stop stop-color="#FF91A5" />
+												<stop offset="0.53125" stop-color="#FF6F88" />
+												<stop offset="1" stop-color="#FF938A" />
+											</linearGradient>
+										</defs>
+									</svg> -->
+								</td>
+								<td>
+									<div class="redirect">
+										<button class="redirect-button">
+											<table>
+												<tr>
+													<td>
+														<div class="redirect-link">
+															<a
+																href="http://127.0.0.1:5173/dashboard"
+																target="_blank"
+																>Go to Trysts</a
+															>
+														</div>
+													</td>
+													<td>
+														<div class="redirect-icon">
+															<svg
+																width="8"
+																height="8"
+																viewBox="0 0 10 10"
+																stroke="white"
+																fill="none"
+																xmlns="http://www.w3.org/2000/svg"
+															>
+																<path
+																	d="M1 1H9M9 1V9M9 1L1 9"
+																	stroke-width="1.5"
+																/>
+															</svg>
+														</div>
+													</td>
+												</tr>
+											</table>
+										</button>
+									</div>
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+				<tr>
+					<td class="main">
+						<div>
+							<table>
+								<tr>
+									<td class="header-text">
+										<span class="bolder-text"
+											>Woohoo, can’t wait to see you 😆</span
+										>
+									</td>
+								</tr>
+								<tr>
+									<td class="content-text-1">
+										<span class="text"
+											>Just one more step before jump into Trysts, feel free to
+											use the lucky number below to start with us.</span
+										>
+									</td>
+								</tr>
+								<tr>
+									<td class="content-text-2">
+										<span class="text">Your code 👇</span>
+									</td>
+								</tr>
+								<tr>
+									<td class="otp">
+										<table>
+											<tr>
+												<td class="otp-box">
+													<div class="otp-text">{{otp}}</div>
+												</td>
+											</tr>
+										</table>
+									</td>
+								</tr>
+								<tr>
+									<td class="line">
+										<table>
+											<tr>
+												<td>
+													<div class="line-stroke"></div>
+												</td>
+											</tr>
+										</table>
+									</td>
+								</tr>
+								<tr>
+									<td class="content-text-3">
+										<span class="text"
+											>Have no idea why you received this email?<br />
+											Just ignore it, some time Jane comes across our
+											keyboard.<br />
+											Say hi to Kui Pap 😼</span
+										>
+									</td>
+								</tr>
+								<tr>
+									<td>
+										<img
+											class="image"
+											src="https://raw.githubusercontent.com/huutinhlg2d/cdn/main/assets/kuipap.png"
+											alt="footer"
+										/>
+									</td>
+								</tr>
+							</table>
+						</div>
+					</td>
+				</tr>
+			</tbody>
+			<!-- <main>
 				<article>
 					<h1 class="text">Woohoo, can’t wait to see you 😆</h1>
 					<span class="text"
@@ -318,8 +374,7 @@
 						alt="footer"
 					/>
 				</figure>
-			</main>
-		</div>
+			</main> -->
+		</table>
 	</body>
 </html>
-
