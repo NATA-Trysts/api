@@ -22,14 +22,7 @@ module.exports = {
 
 		JWT_SECRET: process.env.JWT_SECRET || 'jwt-conduit-secret',
 
-		fields: [
-			'_id',
-			'username',
-			'email',
-			'handler',
-			'accessToken',
-			'refreshToken',
-		],
+		fields: ['_id', 'username', 'email', 'handler', 'refreshToken'],
 
 		entityValidator: {
 			username: { type: 'string', min: 2, max: 15 },
@@ -200,17 +193,10 @@ module.exports = {
 						})
 
 						if (!user) {
-							user = await this.createNewUser(
-								email,
-								null,
-								accessToken,
-								refreshToken,
-								ctx
-							)
+							user = await this.createNewUser(email, null, refreshToken, ctx)
 						} else {
 							user = await this.adapter.updateById(user._id, {
 								...user,
-								accessToken,
 								refreshToken,
 							})
 						}
@@ -336,7 +322,6 @@ module.exports = {
 		},
 
 		get: {
-			auth: 'required', // FOR TESTING PURPOSES ONLY
 			rest: 'GET /users/:id',
 		},
 
@@ -396,14 +381,13 @@ module.exports = {
 		 * @param {Object} ctx
 		 *
 		 * @returns {Object} user
-		 *
+		 *z
 		 */
-		async createNewUser(email, username, accessToken, refreshToken, ctx) {
+		async createNewUser(email, username, refreshToken, ctx) {
 			const entity = {
 				username: username,
 				email: email,
 				handler: username + '#' + Math.floor(1000 + Math.random() * 9000),
-				accessToken: accessToken,
 				refreshToken: refreshToken,
 			}
 
