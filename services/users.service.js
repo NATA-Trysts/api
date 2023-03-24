@@ -2,7 +2,8 @@
 
 const { MoleculerClientError } = require('moleculer').Errors
 
-const bcrypt = require('bcryptjs')
+const { sha256 } = require('js-sha256')
+const otpGenerator = require('otp-generator')
 const jwt = require('jsonwebtoken')
 
 const DbService = require('../mixins/db.mixin')
@@ -10,44 +11,34 @@ const CacheCleanerMixin = require('../mixins/cache.cleaner.mixin')
 
 module.exports = {
 	name: 'users',
+
 	mixins: [
 		DbService('users'),
 		CacheCleanerMixin(['cache.clean.users', 'cache.clean.follows']),
 	],
 
-	/**
-	 * Default settings
-	 */
 	settings: {
-		/** REST Basepath */
 		rest: '/',
-		/** Secret for JWT */
+
 		JWT_SECRET: process.env.JWT_SECRET || 'jwt-conduit-secret',
 
-		/** Public fields */
-		fields: ['_id', 'username', 'email', 'bio', 'image'],
+		fields: ['_id', 'username', 'email', 'handler', 'refreshToken'],
 
-		/** Validator schema for entity */
 		entityValidator: {
-			username: { type: 'string', min: 2 },
-			password: { type: 'string', min: 6 },
+			username: { type: 'string', min: 2, max: 15 },
 			email: { type: 'email' },
-			bio: { type: 'string', optional: true },
-			image: { type: 'string', optional: true },
 		},
 	},
 
-	/**
-	 * Actions
-	 */
 	actions: {
 		/**
-		 * Register a new user
+		 * create a new user
 		 *
 		 * @actions
+		 *
 		 * @param {Object} user - User entity
 		 *
-		 * @returns {Object} Created entity & token
+		 * @returns {Object} Created entity
 		 */
 		create: {
 			rest: 'POST /users',
@@ -55,79 +46,175 @@ module.exports = {
 				user: { type: 'object' },
 			},
 			async handler(ctx) {
-				let entity = ctx.params.user
+				const entity = ctx.params.user
 				await this.validateEntity(entity)
+
 				if (entity.username) {
 					const found = await this.adapter.findOne({
 						username: entity.username,
 					})
-					if (found)
-						throw new MoleculerClientError('Username is exist!', 422, '', [
-							{ field: 'username', message: 'is exist' },
-						])
+					if (found) {
+						throw new MoleculerClientError(
+							'Username is already taken!',
+							422,
+							'',
+							[
+								{
+									field: 'username',
+									message: 'is already taken',
+								},
+							]
+						)
+					}
 				}
 
 				if (entity.email) {
-					const found = await this.adapter.findOne({ email: entity.email })
-					if (found)
-						throw new MoleculerClientError('Email is exist!', 422, '', [
-							{ field: 'email', message: 'is exist' },
+					const found = await this.adapter.findOne({
+						email: entity.email,
+					})
+					if (found) {
+						throw new MoleculerClientError('Email is already exist!', 422, '', [
+							{
+								field: 'email',
+								message: 'is already exist',
+							},
 						])
+					}
 				}
 
-				entity.password = bcrypt.hashSync(entity.password, 10)
-				entity.bio = entity.bio || ''
-				entity.image = entity.image || null
-				entity.createdAt = new Date()
-
-				const doc = await this.adapter.insert(entity)
-				const user = await this.transformDocuments(ctx, {}, doc)
-				const json = await this.transformEntity(user, true, ctx.meta.token)
-				await this.entityChanged('created', json, ctx)
+				const json = await this.createNewUser(
+					entity.email,
+					entity.username,
+					ctx
+				)
 				return json
 			},
 		},
 
 		/**
-		 * Login with username & password
+		 * Login OTP with email
 		 *
 		 * @actions
-		 * @param {Object} user - User credentials
+		 * @param {String} email - User's email address
 		 *
-		 * @returns {Object} Logged in user with token
+		 * @returns {Object} full hash - combined hash of email, code and expiration time
+		 *
 		 */
 		login: {
-			rest: 'POST /users/login',
+			rest: 'POST /login',
 			params: {
-				user: {
-					type: 'object',
-					props: {
-						email: { type: 'email' },
-						password: { type: 'string', min: 1 },
-					},
-				},
+				email: { type: 'email' },
 			},
 			async handler(ctx) {
-				const { email, password } = ctx.params.user
+				const otp = this.generateOtp()
+				const ttl = 5 * 60 * 1000 // 5 minutes
+				const expires = Date.now() + ttl // 5 minutes from now
+				const data = `${ctx.params.email}.${otp}.${expires}`
+				const hash = sha256(data)
+				const fullHash = `${hash}.${expires}`
 
-				const user = await this.adapter.findOne({ email })
-				if (!user)
-					throw new MoleculerClientError(
-						'Email or password is invalid!',
-						422,
-						'',
-						[{ field: 'email', message: 'is not found' }]
-					)
+				await ctx.call('email.send', {
+					to: ctx.params.email,
+					otp,
+				})
 
-				const res = await bcrypt.compare(password, user.password)
-				if (!res)
-					throw new MoleculerClientError('Wrong password!', 422, '', [
-						{ field: 'email', message: 'is not found' },
+				return {
+					fullHash,
+				}
+			},
+		},
+
+		/**
+		 * Verify a user's email address.
+		 *
+		 * @actions
+		 * @param {String} email - User's email address
+		 * @param {String} code - Verification code
+		 * @param {String} hash - Combined hash of email, code and expiration time
+		 *
+		 * @returns {Object} token - JWT token
+		 */
+		verifyOtp: {
+			rest: 'POST /verify',
+			params: {
+				otp: { type: 'string' },
+				email: { type: 'string' },
+				hash: { type: 'string' },
+			},
+			async handler(ctx) {
+				const { otp, hash, email } = ctx.params
+				const currentDate = new Date()
+
+				let [hashValue, expirationTime] = hash.split('.')
+
+				if (!otp) {
+					throw new MoleculerClientError('Invalid otp', 422, '', [
+						{
+							field: 'otp',
+							message: 'is required',
+						},
 					])
+				}
 
-				// Transform user entity (remove password and all protected fields)
-				const doc = await this.transformDocuments(ctx, {}, user)
-				return await this.transformEntity(doc, true, ctx.meta.token)
+				if (!hash) {
+					throw new MoleculerClientError('Invalid hash', 422, '', [
+						{
+							field: 'hash',
+							message: 'is required',
+						},
+					])
+				}
+
+				if (!email) {
+					throw new MoleculerClientError('Invalid email', 422, '', [
+						{
+							field: 'email',
+							message: 'is required',
+						},
+					])
+				}
+
+				if (currentDate.getTime() > parseInt(expirationTime)) {
+					throw new MoleculerClientError('Expired otp', 422, '', [
+						{
+							field: 'otp',
+							message: 'is expired',
+						},
+					])
+				} else {
+					const data = `${email}.${otp}.${expirationTime}`
+					const calculatedHash = sha256(data)
+
+					if (calculatedHash === hashValue) {
+						const { accessToken, refreshToken } = await this.generateJWT(email)
+
+						let user = await this.adapter.findOne({
+							email,
+						})
+
+						if (!user) {
+							user = await this.createNewUser(email, null, refreshToken, ctx)
+						} else {
+							user = await this.adapter.updateById(user._id, {
+								...user,
+								refreshToken,
+							})
+						}
+
+						return {
+							accessToken,
+							refreshToken,
+							user,
+						}
+					} else {
+						throw new MoleculerClientError('Invalid otp', 422, '', [
+							{
+								field: 'otp',
+								message: 'is invalid',
+							},
+						])
+					}
+				}
 			},
 		},
 
@@ -140,10 +227,6 @@ module.exports = {
 		 * @returns {Object} Resolved user
 		 */
 		resolveToken: {
-			cache: {
-				keys: ['token'],
-				ttl: 60 * 60, // 1 hour
-			},
 			params: {
 				token: 'string',
 			},
@@ -153,98 +236,84 @@ module.exports = {
 						ctx.params.token,
 						this.settings.JWT_SECRET,
 						(err, decoded) => {
-							if (err) return reject(err)
+							if (err) {
+								return reject(err)
+							}
 
 							resolve(decoded)
 						}
 					)
 				})
 
-				if (decoded.id) return this.getById(decoded.id)
-			},
-		},
-
-		/**
-		 * Get current user entity.
-		 * Auth is required!
-		 *
-		 * @actions
-		 *
-		 * @returns {Object} User entity
-		 */
-		me: {
-			auth: 'required',
-			rest: 'GET /user',
-			cache: {
-				keys: ['#userID'],
-			},
-			async handler(ctx) {
-				const user = await this.getById(ctx.meta.user._id)
-				if (!user) throw new MoleculerClientError('User not found!', 400)
-
-				const doc = await this.transformDocuments(ctx, {}, user)
-				return await this.transformEntity(doc, true, ctx.meta.token)
-			},
-		},
-
-		/**
-		 * Update current user entity.
-		 * Auth is required!
-		 *
-		 * @actions
-		 *
-		 * @param {Object} user - Modified fields
-		 * @returns {Object} User entity
-		 */
-		updateMyself: {
-			auth: 'required',
-			rest: 'PUT /user',
-			params: {
-				user: {
-					type: 'object',
-					props: {
-						username: {
-							type: 'string',
-							min: 2,
-							optional: true,
-							pattern: /^[a-zA-Z0-9]+$/,
-						},
-						password: { type: 'string', min: 6, optional: true },
-						email: { type: 'email', optional: true },
-						bio: { type: 'string', optional: true },
-						image: { type: 'string', optional: true },
-					},
-				},
-			},
-			async handler(ctx) {
-				const newData = ctx.params.user
-				if (newData.username) {
-					const found = await this.adapter.findOne({
-						username: newData.username,
+				if (decoded.email) {
+					const user = await this.adapter.findOne({
+						email: decoded.email,
 					})
-					if (found && found._id.toString() !== ctx.meta.user._id.toString())
-						throw new MoleculerClientError('Username is exist!', 422, '', [
-							{ field: 'username', message: 'is exist' },
-						])
-				}
 
-				if (newData.email) {
-					const found = await this.adapter.findOne({ email: newData.email })
-					if (found && found._id.toString() !== ctx.meta.user._id.toString())
-						throw new MoleculerClientError('Email is exist!', 422, '', [
-							{ field: 'email', message: 'is exist' },
-						])
+					if (user) return user
 				}
-				newData.updatedAt = new Date()
-				const update = {
-					$set: newData,
-				}
-				const doc = await this.adapter.updateById(ctx.meta.user._id, update)
+			},
+		},
 
-				const user = await this.transformDocuments(ctx, {}, doc)
-				const json = await this.transformEntity(user, true, ctx.meta.token)
-				await this.entityChanged('updated', json, ctx)
-				return json
+		/**
+		 * Refresh JWT token
+		 *
+		 * @actions
+		 * @param {String} refreshToken - Refresh token
+		 *
+		 * @returns {Object} accessToken - JWT access token
+		 * @returns {Object} refreshToken - JWT refresh token
+		 *
+		 * @throws {MoleculerClientError} - If refresh token is invalid
+		 */
+		retrieveAccessToken: {
+			rest: 'GET /refresh',
+			params: {
+				refreshToken: 'string',
+			},
+			async handler(ctx) {
+				const { refreshToken } = ctx.params
+
+				try {
+					const decodedRefreshToken = jwt.verify(
+						refreshToken,
+						this.settings.JWT_SECRET
+					)
+					const { email } = decodedRefreshToken
+
+					const user = await this.adapter.findOne({
+						email,
+					})
+
+					if (user.refreshToken !== refreshToken) {
+						throw new MoleculerClientError('Invalid refresh token', 422, '', [
+							{
+								field: 'refreshToken',
+								message: 'is invalid',
+							},
+						])
+					} else {
+						const { accessToken, refreshToken } = await this.generateJWT(email)
+
+						await this.adapter.updateById(user._id, {
+							...user,
+							accessToken,
+							refreshToken,
+						})
+
+						return {
+							accessToken,
+							refreshToken,
+						}
+					}
+				} catch (err) {
+					throw new MoleculerClientError('Invalid refresh token', 422, '', [
+						{
+							field: 'refreshToken',
+							message: 'is invalid',
+						},
+					])
+				}
 			},
 		},
 
@@ -263,160 +332,69 @@ module.exports = {
 		remove: {
 			rest: 'DELETE /users/:id',
 		},
-
-		/**
-		 * Get a user profile.
-		 *
-		 * @actions
-		 *
-		 * @param {String} username - Username
-		 * @returns {Object} User entity
-		 */
-		profile: {
-			cache: {
-				keys: ['#userID', 'username'],
-			},
-			rest: 'GET /profiles/:username',
-			params: {
-				username: { type: 'string' },
-			},
-			async handler(ctx) {
-				const user = await this.adapter.findOne({
-					username: ctx.params.username,
-				})
-				if (!user) throw new MoleculerClientError('User not found!', 404)
-
-				const doc = await this.transformDocuments(ctx, {}, user)
-				return await this.transformProfile(ctx, doc, ctx.meta.user)
-			},
-		},
-
-		/**
-		 * Follow a user
-		 * Auth is required!
-		 *
-		 * @actions
-		 *
-		 * @param {String} username - Followed username
-		 * @returns {Object} Current user entity
-		 */
-		follow: {
-			auth: 'required',
-			rest: 'POST /profiles/:username/follow',
-			params: {
-				username: { type: 'string' },
-			},
-			async handler(ctx) {
-				const user = await this.adapter.findOne({
-					username: ctx.params.username,
-				})
-				if (!user) throw new MoleculerClientError('User not found!', 404)
-
-				await ctx.call('follows.add', {
-					user: ctx.meta.user._id.toString(),
-					follow: user._id.toString(),
-				})
-				const doc = await this.transformDocuments(ctx, {}, user)
-				return await this.transformProfile(ctx, doc, ctx.meta.user)
-			},
-		},
-
-		/**
-		 * Unfollow a user
-		 * Auth is required!
-		 *
-		 * @actions
-		 *
-		 * @param {String} username - Unfollowed username
-		 * @returns {Object} Current user entity
-		 */
-		unfollow: {
-			auth: 'required',
-			rest: 'DELETE /profiles/:username/follow',
-			params: {
-				username: { type: 'string' },
-			},
-			async handler(ctx) {
-				const user = await this.adapter.findOne({
-					username: ctx.params.username,
-				})
-				if (!user) throw new MoleculerClientError('User not found!', 404)
-
-				await ctx.call('follows.delete', {
-					user: ctx.meta.user._id.toString(),
-					follow: user._id.toString(),
-				})
-				const doc = await this.transformDocuments(ctx, {}, user)
-				return await this.transformProfile(ctx, doc, ctx.meta.user)
-			},
-		},
 	},
 
-	/**
-	 * Methods
-	 */
 	methods: {
 		/**
-		 * Generate a JWT token from user entity
+		 * Generate a JWT token from email
 		 *
-		 * @param {Object} user
+		 * @param {String} email
 		 */
-		generateJWT(user) {
-			const today = new Date()
-			const exp = new Date(today)
-			exp.setDate(today.getDate() + 60)
+		generateJWT(email) {
+			const payload = { email }
 
-			return jwt.sign(
-				{
-					id: user._id,
-					username: user.username,
-					exp: Math.floor(exp.getTime() / 1000),
-				},
-				this.settings.JWT_SECRET
-			)
+			const accessToken = jwt.sign(payload, this.settings.JWT_SECRET, {
+				expiresIn: '5m',
+			})
+
+			const refreshToken = jwt.sign(payload, this.settings.JWT_SECRET, {
+				expiresIn: '7d',
+			})
+
+			return { accessToken, refreshToken }
 		},
 
 		/**
-		 * Transform returned user entity. Generate JWT token if neccessary.
+		 * Generate a random OTP
 		 *
-		 * @param {Object} user
-		 * @param {Boolean} withToken
+		 * @returns {String} otp
+		 *
+		 * @example
+		 * 123456
 		 */
-		transformEntity(user, withToken, token) {
-			if (user) {
-				//user.image = user.image || "https://www.gravatar.com/avatar/" + crypto.createHash("md5").update(user.email).digest("hex") + "?d=robohash";
-				user.image = user.image || ''
-				if (withToken) user.token = token || this.generateJWT(user)
-			}
-
-			return { user }
+		generateOtp() {
+			return otpGenerator.generate(6, {
+				digits: true,
+				lowerCaseAlphabets: false,
+				upperCaseAlphabets: false,
+				specialChars: false,
+			})
 		},
 
 		/**
-		 * Transform returned user entity as profile.
+		 * Create a new user
 		 *
-		 * @param {Context} ctx
-		 * @param {Object} user
-		 * @param {Object?} loggedInUser
+		 * @param {String} email
+		 * @param {String} username
+		 * @param {String} accessToken
+		 * @param {String} refreshToken
+		 * @param {Object} ctx
+		 *
+		 * @returns {Object} user
+		 *z
 		 */
-		async transformProfile(ctx, user, loggedInUser) {
-			//user.image = user.image || "https://www.gravatar.com/avatar/" + crypto.createHash("md5").update(user.email).digest("hex") + "?d=robohash";
-			user.image =
-				user.image ||
-				'https://static.productionready.io/images/smiley-cyrus.jpg'
-
-			if (loggedInUser) {
-				const res = await ctx.call('follows.has', {
-					user: loggedInUser._id.toString(),
-					follow: user._id.toString(),
-				})
-				user.following = res
-			} else {
-				user.following = false
+		async createNewUser(email, username, refreshToken, ctx) {
+			const entity = {
+				username: username,
+				email: email,
+				handler: username + '#' + Math.floor(1000 + Math.random() * 9000),
+				refreshToken: refreshToken,
 			}
 
-			return { profile: user }
+			const doc = await this.adapter.insert(entity)
+			const user = await this.transformDocuments(ctx, {}, doc)
+			await this.entityChanged('created', user, ctx)
+			return user
 		},
 	},
 }
-
