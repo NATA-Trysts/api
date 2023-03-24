@@ -67,7 +67,24 @@ module.exports = {
 				)
 				const source = fs.readFileSync(filePath, 'utf-8').toString()
 				const template = handlebars.compile(source)
-				const replacements = { otp }
+
+				const header =
+					this.settings.transport.email.otp.headers[
+						crypto.randomInt(this.settings.transport.email.otp.headers.length)
+					]
+				const firstLine =
+					this.settings.transport.email.otp.firstLines[
+						crypto.randomInt(
+							this.settings.transport.email.otp.firstLines.length
+						)
+					]
+
+				const replacements = {
+					otp: otp,
+					header: header,
+					firstLine: firstLine,
+				}
+
 				const htmlToSend = template(replacements)
 
 				let mailOptions = {
