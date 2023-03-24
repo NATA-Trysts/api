@@ -35,7 +35,8 @@
 		"otp-generator": "^4.0.1",
 		"redlock": "^4.1.0",
 		"slug": "^2.1.1",
-		"stripe": "^11.15.0"
+		"stripe": "^11.15.0",
+		"uuid": "^9.0.0"
 	},
 	"engines": {
 		"node": ">= 8.x.x"
