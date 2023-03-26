@@ -12,10 +12,7 @@ const CacheCleanerMixin = require('../mixins/cache.cleaner.mixin')
 module.exports = {
 	name: 'users',
 
-	mixins: [
-		DbService('users'),
-		CacheCleanerMixin(['cache.clean.users', 'cache.clean.follows']),
-	],
+	mixins: [DbService('users'), CacheCleanerMixin(['cache.clean.users'])],
 
 	settings: {
 		rest: '/',
@@ -274,6 +271,20 @@ module.exports = {
 			async handler(ctx) {
 				const { refreshToken } = ctx.params
 
+				// find in blacklist tokens
+				const blacklistedToken = await ctx.call('tokens.find', {
+					token: refreshToken,
+				})
+
+				if (blacklistedToken) {
+					throw new MoleculerClientError('Invalid refresh token', 422, '', [
+						{
+							field: 'refreshToken',
+							message: 'is invalid',
+						},
+					])
+				}
+
 				try {
 					const decodedRefreshToken = jwt.verify(
 						refreshToken,
@@ -310,6 +321,41 @@ module.exports = {
 					throw new MoleculerClientError('Invalid refresh token', 422, '', [
 						{
 							field: 'refreshToken',
+							message: 'is invalid',
+						},
+					])
+				}
+			},
+		},
+
+		logout: {
+			rest: 'POST /logout',
+			params: {
+				token: 'string',
+			},
+			async handler(ctx) {
+				const { token } = ctx.params
+
+				if (!token) {
+					throw new MoleculerClientError('Invalid token', 422, '', [
+						{
+							field: 'token',
+							message: 'is required',
+						},
+					])
+				}
+
+				try {
+					const expiresAt = this.getExpiredTime(token)
+
+					await ctx.call('tokens.add', {
+						token,
+						expiresAt,
+					})
+				} catch (err) {
+					throw new MoleculerClientError('Invalid token', 422, '', [
+						{
+							field: 'token',
 							message: 'is invalid',
 						},
 					])
@@ -395,6 +441,11 @@ module.exports = {
 			const user = await this.transformDocuments(ctx, {}, doc)
 			await this.entityChanged('created', user, ctx)
 			return user
+		},
+
+		getExpiredTime(token) {
+			const decoded = jwt.decode(token, { complete: true })
+			return decoded.payload.exp
 		},
 	},
 }
