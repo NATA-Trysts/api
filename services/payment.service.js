@@ -8,17 +8,23 @@ module.exports = {
 
 	settings: {
 		stripeApiKey:
-			'sk_test_51KIKjWCmxo26gX2lpx66gzlURDAdcg3yEK4z2DMhs8JQRg4WQMvbjUaxx5TK5BoQR2OdS7D7qn9SpJifjjIoP7go00B4xSWi3L',
+			'sk_test_51Moi0JC3H9WnnPLnb7SMrdWlrHU0SeReC003pwjYGykDNTtFUH7ykplqfy4huQrKMT17YPYgmUaINBT4GEbNC9BC006OLHU3r5',
 	},
 
 	actions: {
 		pay: {
 			rest: 'POST /',
 			params: {
-				amount: 'number',
+				items: { type: 'array' },
 			},
 			async handler(ctx) {
-				return this.pay(ctx.params.amount)
+				console.log(ctx)
+
+				const amount = ctx.params.items.reduce(
+					(accumulator, current) => accumulator + current.price,
+					0
+				)
+				return this.pay(amount)
 			},
 		},
 	},
@@ -37,7 +43,7 @@ module.exports = {
 					},
 				})
 
-				return paymentIntent
+				return { clientSecret: paymentIntent.client_secret }
 			} catch (error) {
 				return new MoleculerRetryableError(
 					'Unable to create payment intent! ' + error.message
@@ -52,4 +58,3 @@ module.exports = {
 		})
 	},
 }
-
