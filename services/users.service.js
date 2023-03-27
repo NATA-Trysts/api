@@ -271,20 +271,6 @@ module.exports = {
 			async handler(ctx) {
 				const { refreshToken } = ctx.params
 
-				// find in blacklist tokens
-				const blacklistedToken = await ctx.call('tokens.find', {
-					token: refreshToken,
-				})
-
-				if (blacklistedToken) {
-					throw new MoleculerClientError('Invalid refresh token', 422, '', [
-						{
-							field: 'refreshToken',
-							message: 'is invalid',
-						},
-					])
-				}
-
 				try {
 					const decodedRefreshToken = jwt.verify(
 						refreshToken,
