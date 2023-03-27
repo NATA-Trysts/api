@@ -107,18 +107,18 @@ module.exports = {
 				email: { type: 'email' },
 			},
 			async handler(ctx) {
-				// const otp = this.generateOtp()
-				const otp = '123456'
+				const otp = this.generateOtp()
+				// const otp = '123456'
 				const ttl = 5 * 60 * 1000 // 5 minutes
 				const expires = Date.now() + ttl // 5 minutes from now
 				const data = `${ctx.params.email}.${otp}.${expires}`
 				const hash = sha256(data)
 				const fullHash = `${hash}.${expires}`
 
-				// await ctx.call('email.send', {
-				// 	to: ctx.params.email,
-				// 	otp,
-				// })
+				await ctx.call('email.send', {
+					to: ctx.params.email,
+					otp,
+				})
 
 				return {
 					fullHash,
