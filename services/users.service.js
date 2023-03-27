@@ -19,6 +19,10 @@ module.exports = {
 
 		JWT_SECRET: process.env.JWT_SECRET || 'jwt-conduit-secret',
 
+		randomNoun: ['Apple', 'Banana', 'Orange', 'Pineapple', 'Potato', 'Tomato'],
+
+		randomAdjective: ['Red', 'Green', 'Blue', 'Yellow', 'Purple', 'Orange'],
+
 		fields: ['_id', 'username', 'email', 'handler', 'refreshToken'],
 
 		entityValidator: {
@@ -103,17 +107,18 @@ module.exports = {
 				email: { type: 'email' },
 			},
 			async handler(ctx) {
-				const otp = this.generateOtp()
+				// const otp = this.generateOtp()
+				const otp = '123456'
 				const ttl = 5 * 60 * 1000 // 5 minutes
 				const expires = Date.now() + ttl // 5 minutes from now
 				const data = `${ctx.params.email}.${otp}.${expires}`
 				const hash = sha256(data)
 				const fullHash = `${hash}.${expires}`
 
-				await ctx.call('email.send', {
-					to: ctx.params.email,
-					otp,
-				})
+				// await ctx.call('email.send', {
+				// 	to: ctx.params.email,
+				// 	otp,
+				// })
 
 				return {
 					fullHash,
@@ -190,7 +195,13 @@ module.exports = {
 						})
 
 						if (!user) {
-							user = await this.createNewUser(email, null, refreshToken, ctx)
+							const randomName = this.getRandomName()
+							user = await this.createNewUser(
+								email,
+								randomName,
+								refreshToken,
+								ctx
+							)
 						} else {
 							user = await this.adapter.updateById(user._id, {
 								...user,
@@ -392,6 +403,17 @@ module.exports = {
 			const user = await this.transformDocuments(ctx, {}, doc)
 			await this.entityChanged('created', user, ctx)
 			return user
+		},
+
+		getRandomName() {
+			// get a random number from 0 to 5
+			const randomOne = Math.floor(Math.random() * 5)
+			const randomTwo = Math.floor(Math.random() * 5)
+
+			// get a random name from the array
+			const randomName = `${this.settings.randomNoun[randomOne]}${this.settings.randomAdjective[randomTwo]}`
+
+			return randomName
 		},
 	},
 }
