@@ -107,18 +107,18 @@ module.exports = {
 				email: { type: 'email' },
 			},
 			async handler(ctx) {
-				const otp = this.generateOtp()
-				// const otp = '123456'
+				// const otp = this.generateOtp()
+				const otp = '123456'
 				const ttl = 5 * 60 * 1000 // 5 minutes
 				const expires = Date.now() + ttl // 5 minutes from now
 				const data = `${ctx.params.email}.${otp}.${expires}`
 				const hash = sha256(data)
 				const fullHash = `${hash}.${expires}`
 
-				await ctx.call('email.send', {
-					to: ctx.params.email,
-					otp,
-				})
+				// await ctx.call('email.send', {
+				// 	to: ctx.params.email,
+				// 	otp,
+				// })
 
 				return {
 					fullHash,
@@ -209,6 +209,23 @@ module.exports = {
 							})
 						}
 
+						// ctx.meta.$responseHeaders = {
+						// 	cookies: {
+						// 		refreshToken: {
+						// 			value: refreshToken,
+						// 			options: {
+						// 				httpOnly: true,
+						// 				secure: true,
+						// 				sameSite: 'none',
+						// 			},
+						// 		},
+						// 	},
+						// }
+
+						ctx.meta.cookies = {
+							refreshToken,
+						}
+
 						return {
 							accessToken,
 							refreshToken,
@@ -275,12 +292,22 @@ module.exports = {
 		 * @throws {MoleculerClientError} - If refresh token is invalid
 		 */
 		retrieveAccessToken: {
+			auth: 'required',
 			rest: 'GET /refresh',
 			params: {
 				refreshToken: 'string',
 			},
 			async handler(ctx) {
 				const { refreshToken } = ctx.params
+
+				if (!refreshToken) {
+					throw new MoleculerClientError('Invalid refresh token', 422, '', [
+						{
+							field: 'refreshToken',
+							message: 'is required',
+						},
+					])
+				}
 
 				try {
 					const decodedRefreshToken = jwt.verify(
@@ -339,6 +366,25 @@ module.exports = {
 
 		remove: {
 			rest: 'DELETE /users/:id',
+		},
+
+		testSetCookies: {
+			rest: 'GET /test-set-cookies',
+			async handler(ctx) {
+				ctx.meta.cookies = {
+					test: 'Set from Moleculer',
+				}
+
+				return 'ok'
+			},
+		},
+
+		testGetCookies: {
+			rest: 'GET /test-get-cookies',
+			async handler(ctx) {
+				// this.logger.warn(ctx.meta.cookies)
+				this.logger.warn('GET: ', ctx.meta.$requestHeaders)
+			},
 		},
 	},
 
