@@ -15,15 +15,12 @@ module.exports = {
 		pay: {
 			rest: 'POST /',
 			params: {
-				items: { type: 'array' },
+				items: { type: 'object' },
 			},
 			async handler(ctx) {
 				console.log(ctx)
 
-				const amount = ctx.params.items.reduce(
-					(accumulator, current) => accumulator + current.price,
-					0
-				)
+				const amount = ctx.params.items.price
 				return this.pay(amount)
 			},
 		},
