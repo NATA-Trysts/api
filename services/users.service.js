@@ -12,15 +12,16 @@ const CacheCleanerMixin = require('../mixins/cache.cleaner.mixin')
 module.exports = {
 	name: 'users',
 
-	mixins: [
-		DbService('users'),
-		CacheCleanerMixin(['cache.clean.users', 'cache.clean.follows']),
-	],
+	mixins: [DbService('users'), CacheCleanerMixin(['cache.clean.users'])],
 
 	settings: {
 		rest: '/',
 
 		JWT_SECRET: process.env.JWT_SECRET || 'jwt-conduit-secret',
+
+		randomNoun: ['Apple', 'Banana', 'Orange', 'Pineapple', 'Potato', 'Tomato'],
+
+		randomAdjective: ['Red', 'Green', 'Blue', 'Yellow', 'Purple', 'Orange'],
 
 		fields: ['_id', 'username', 'email', 'handler', 'refreshToken'],
 
@@ -107,6 +108,7 @@ module.exports = {
 			},
 			async handler(ctx) {
 				const otp = this.generateOtp()
+				// const otp = '123456'
 				const ttl = 5 * 60 * 1000 // 5 minutes
 				const expires = Date.now() + ttl // 5 minutes from now
 				const data = `${ctx.params.email}.${otp}.${expires}`
@@ -193,12 +195,22 @@ module.exports = {
 						})
 
 						if (!user) {
-							user = await this.createNewUser(email, null, refreshToken, ctx)
+							const randomName = this.getRandomName()
+							user = await this.createNewUser(
+								email,
+								randomName,
+								refreshToken,
+								ctx
+							)
 						} else {
 							user = await this.adapter.updateById(user._id, {
 								...user,
 								refreshToken,
 							})
+						}
+
+						ctx.meta.cookies = {
+							refreshToken,
 						}
 
 						return {
@@ -268,11 +280,17 @@ module.exports = {
 		 */
 		retrieveAccessToken: {
 			rest: 'GET /refresh',
-			params: {
-				refreshToken: 'string',
-			},
 			async handler(ctx) {
-				const { refreshToken } = ctx.params
+				const refreshToken = ctx.meta.cookies
+
+				if (!refreshToken) {
+					throw new MoleculerClientError('Invalid refresh token', 422, '', [
+						{
+							field: 'refreshToken',
+							message: 'is required',
+						},
+					])
+				}
 
 				try {
 					const decodedRefreshToken = jwt.verify(
@@ -298,12 +316,12 @@ module.exports = {
 						await this.adapter.updateById(user._id, {
 							...user,
 							accessToken,
-							refreshToken,
+							// refreshToken,
 						})
 
 						return {
 							accessToken,
-							refreshToken,
+							// refreshToken,
 						}
 					}
 				} catch (err) {
@@ -395,6 +413,17 @@ module.exports = {
 			const user = await this.transformDocuments(ctx, {}, doc)
 			await this.entityChanged('created', user, ctx)
 			return user
+		},
+
+		getRandomName() {
+			// get a random number from 0 to 5
+			const randomOne = Math.floor(Math.random() * 5)
+			const randomTwo = Math.floor(Math.random() * 5)
+
+			// get a random name from the array
+			const randomName = `${this.settings.randomNoun[randomOne]}${this.settings.randomAdjective[randomTwo]}`
+
+			return randomName
 		},
 	},
 }

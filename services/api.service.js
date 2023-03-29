@@ -2,6 +2,7 @@
 
 const _ = require('lodash')
 const ApiGateway = require('moleculer-web')
+const Cookies = require('cookies')
 const { UnAuthorizedError } = ApiGateway.Errors
 
 module.exports = {
@@ -15,11 +16,53 @@ module.exports = {
 			{
 				path: '/api',
 
+				onBeforeCall(ctx, route, req, res) {
+					if (
+						ctx.params.req.url === '/verify' ||
+						ctx.params.req.url === '/refresh'
+					) {
+						res.cookies = new Cookies(req, res, { secure: true })
+						// Set request cookies to context meta
+						ctx.meta.cookies = res.cookies.get('refreshToken')
+					}
+				},
+
+				onAfterCall(ctx, route, req, res, data) {
+					if (ctx.params.req.url === '/verify') {
+						if (ctx.meta.cookies) {
+							res.cookies.set('refreshToken', ctx.meta.cookies.refreshToken, {
+								secure: true,
+								sameSite: 'none',
+								maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+							})
+						}
+					}
+					return data
+				},
+
 				authorization: true,
 				autoAliases: true,
 
+				whitelist: [
+					// Access to any actions in all services under "/api" URL
+					'**',
+				],
+
 				// Set CORS headers
-				cors: true,
+				cors: {
+					origin: 'http://127.0.0.1:5173',
+					methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'DELETE'],
+					allowedHeaders: [
+						'Authorization',
+						'Access-Control-Allow-Headers, Origin, Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers',
+					],
+					exposedHeaders: [
+						'Set-Cookie, Access-Control-Allow-Headers, Origin, Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers',
+					],
+					credentials: true,
+				},
+
+				// cors: true,
 
 				// Parse body content
 				bodyParsers: {
