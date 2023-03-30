@@ -320,6 +320,12 @@ module.exports = {
 						})
 
 						return {
+							user: {
+								_id: user._id,
+								username: user.username,
+								email: user.email,
+								handler: user.handler,
+							},
 							accessToken,
 							// refreshToken,
 						}
