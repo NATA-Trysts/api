@@ -1,11 +1,9 @@
 'use strict'
 
 const { MoleculerClientError } = require('moleculer').Errors
-
 const { sha256 } = require('js-sha256')
 const otpGenerator = require('otp-generator')
 const jwt = require('jsonwebtoken')
-
 const DbService = require('../mixins/db.mixin')
 const CacheCleanerMixin = require('../mixins/cache.cleaner.mixin')
 

@@ -1,10 +1,8 @@
 'use strict'
 
 const { MoleculerClientError } = require('moleculer').Errors
-
 const { v4: uuidv4 } = require('uuid')
 const bcrypt = require('bcryptjs')
-
 const DbService = require('../mixins/db.mixin')
 
 module.exports = {

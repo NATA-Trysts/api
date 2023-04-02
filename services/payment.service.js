@@ -7,8 +7,7 @@ module.exports = {
 	name: 'payment',
 
 	settings: {
-		stripeApiKey:
-			'sk_test_51Moi0JC3H9WnnPLnb7SMrdWlrHU0SeReC003pwjYGykDNTtFUH7ykplqfy4huQrKMT17YPYgmUaINBT4GEbNC9BC006OLHU3r5',
+		stripeApiKey: process.env.STRIPE_API_KEY,
 	},
 
 	actions: {
