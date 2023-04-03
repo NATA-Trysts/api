@@ -17,6 +17,10 @@ module.exports = {
 	settings: {
 		rest: '/',
 
+		HMS_ACCESS_TOKEN: process.env.HMS_ACCESS_TOKEN,
+		HMS_APP_SECRET: process.env.HMS_APP_SECRET,
+		HMS_TEMPLATE_ID: process.env.HMS_TEMPLATE_ID,
+
 		fields: [
 			'_id',
 			'name',
@@ -270,9 +274,8 @@ module.exports = {
 		},
 
 		generateHMSToken() {
-			const appAccessToken = '63896666195ad14bdcd6ef1f'
-			const appSecret =
-				'n-PXc2bnmxBVPbq9rQn25SFxu-OP1gOZXo-J3bVXG9TYCnilF62TBqgJlRTZGPQmV9xlHF22vq6wGMmlWSIsYz5LKQi2Xst0452FveWCydzvGPAIhbBpurLorInBXaRNpFLsrNbjj54pESoyzuFr4oqBc0mBry5tnaVKtr3inz0='
+			const appAccessToken = this.settings.HMS_ACCESS_TOKEN
+			const appSecret = this.settings.HMS_APP_SECRET
 
 			const payload = {
 				access_key: appAccessToken,
@@ -293,6 +296,7 @@ module.exports = {
 
 		createHMSRoom(name) {
 			const managementToken = this.generateHMSToken()
+			const templateId = this.settings.HMS_TEMPLATE_ID
 
 			return axios
 				.post(
@@ -300,7 +304,7 @@ module.exports = {
 					{
 						name: `${name}-${Date.now()}`,
 						description: 'Dummy description',
-						template_id: '638967682b58471af0e13ee7',
+						template_id: templateId,
 						region: 'us',
 					},
 					{
