@@ -1,17 +1,17 @@
-"use strict"
+'use strict'
 
 module.exports = {
-	namespace: "trysts",
+	namespace: 'trysts',
 	//transporter: "TCP",
 	logger: {
-		type: "Console",
+		type: 'Console',
 		options: {
 			// Using colors on the output
 			colors: true,
 			// Print module names with different colors (like docker-compose for containers)
 			moduleColors: false,
 			// Line formatter. It can be "json", "short", "simple", "full", a `Function` or a template string like "{timestamp} {level} {nodeID}/{mod}: {msg}"
-			formatter: "full",
+			formatter: 'full',
 			// Custom object printer. If not defined, it uses the `util.inspect` method.
 			objectPrinter: null,
 			// Auto-padding the module name in order to messages begin at the same column.
@@ -19,7 +19,7 @@ module.exports = {
 		},
 	},
 	cacher: {
-		type: "memory",
+		type: 'memory',
 		options: {
 			maxParamsLength: 100,
 		},
@@ -30,7 +30,7 @@ module.exports = {
 		enabled: true,
 		exporter: [
 			{
-				type: "Console",
+				type: 'Console',
 				options: {
 					width: 100,
 					colors: true,

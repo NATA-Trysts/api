@@ -6,6 +6,7 @@ const otpGenerator = require('otp-generator')
 const jwt = require('jsonwebtoken')
 const DbService = require('../mixins/db.mixin')
 const CacheCleanerMixin = require('../mixins/cache.cleaner.mixin')
+const _ = require('lodash')
 
 module.exports = {
 	name: 'users',
@@ -21,7 +22,7 @@ module.exports = {
 
 		randomAdjective: ['Red', 'Green', 'Blue', 'Yellow', 'Purple', 'Orange'],
 
-		fields: ['_id', 'username', 'email', 'handler', 'refreshToken'],
+		fields: ['_id', 'username', 'email', 'handler', 'avatar', 'refreshToken'],
 
 		entityValidator: {
 			username: { type: 'string', min: 2, max: 15 },
@@ -139,10 +140,19 @@ module.exports = {
 			params: {
 				otp: { type: 'string' },
 				email: { type: 'string' },
+				anonymous: {
+					type: 'object',
+					props: {
+						name: 'string',
+						handler: 'string',
+						avatar: 'string',
+					},
+					optional: true,
+				},
 				hash: { type: 'string' },
 			},
 			async handler(ctx) {
-				const { otp, hash, email } = ctx.params
+				const { otp, hash, email, anonymous } = ctx.params
 				const currentDate = new Date()
 
 				let [hashValue, expirationTime] = hash.split('.')
@@ -193,13 +203,17 @@ module.exports = {
 						})
 
 						if (!user) {
-							const randomName = this.getRandomName()
-							user = await this.createNewUser(
-								email,
-								randomName,
-								refreshToken,
-								ctx
-							)
+							user = anonymous
+							if (_.isEmpty(user)) {
+								const randomName = this.getRandomName()
+								user = {
+									name: randomName,
+									handler: `${randomName}#${this.generateCode(4)}`,
+									avatar:
+										'https://i.natgeofe.com/n/548467d8-c5f1-4551-9f58-6817a8d2c45e/NationalGeographic_2572187_square.jpg',
+								}
+							}
+							user = await this.createNewUser(email, user, refreshToken, ctx)
 						} else {
 							user = await this.adapter.updateById(user._id, {
 								...user,
@@ -214,7 +228,13 @@ module.exports = {
 						return {
 							accessToken,
 							refreshToken,
-							user,
+							user: {
+								_id: user._id,
+								username: user.username,
+								email: user.email,
+								handler: user.handler,
+								avatar: user.avatar,
+							},
 						}
 					} else {
 						throw new MoleculerClientError('Invalid otp', 422, '', [
@@ -323,6 +343,7 @@ module.exports = {
 								username: user.username,
 								email: user.email,
 								handler: user.handler,
+								avatar: user.avatar,
 							},
 							accessToken,
 							// refreshToken,
@@ -335,6 +356,27 @@ module.exports = {
 							message: 'is invalid',
 						},
 					])
+				}
+			},
+		},
+
+		retrieveAuthenticatedUser: {
+			rest: 'GET /refresh/user',
+			auth: 'required',
+			async handler(ctx) {
+				const userId = ctx.meta.userID
+
+				const user = await this.adapter.findOne({
+					userId,
+				})
+
+				return {
+					user: {
+						_id: user._id,
+						username: user.username,
+						email: user.email,
+						handler: user.handler,
+					},
 				}
 			},
 		},
@@ -377,15 +419,16 @@ module.exports = {
 		},
 
 		/**
-		 * Generate a random OTP
+		 * Generate a random code
 		 *
-		 * @returns {String} otp
+		 * @param {Number} length
 		 *
-		 * @example
-		 * 123456
+		 * @returns {String} code
+		 *
 		 */
-		generateOtp() {
-			return otpGenerator.generate(6, {
+		generateCode(length) {
+			length = length | 4
+			return otpGenerator.generate(length, {
 				digits: true,
 				lowerCaseAlphabets: false,
 				upperCaseAlphabets: false,
@@ -394,29 +437,42 @@ module.exports = {
 		},
 
 		/**
+		 * Generate a random OTP
+		 *
+		 * @returns {String} otp
+		 *
+		 * @example
+		 * 123456
+		 */
+		generateOtp() {
+			return this.generateCode(6)
+		},
+
+		/**
 		 * Create a new user
 		 *
 		 * @param {String} email
-		 * @param {String} username
+		 * @param {Object} user
 		 * @param {String} accessToken
 		 * @param {String} refreshToken
 		 * @param {Object} ctx
 		 *
 		 * @returns {Object} user
-		 *z
+		 *
 		 */
-		async createNewUser(email, username, refreshToken, ctx) {
+		async createNewUser(email, user, refreshToken, ctx) {
 			const entity = {
-				username: username,
+				username: user.name,
+				handler: user.handler,
+				avatar: user.avatar,
 				email: email,
-				handler: username + '#' + Math.floor(1000 + Math.random() * 9000),
 				refreshToken: refreshToken,
 			}
 
 			const doc = await this.adapter.insert(entity)
-			const user = await this.transformDocuments(ctx, {}, doc)
-			await this.entityChanged('created', user, ctx)
-			return user
+			const createdUser = await this.transformDocuments(ctx, {}, doc)
+			await this.entityChanged('created', createdUser, ctx)
+			return createdUser
 		},
 
 		getRandomName() {
