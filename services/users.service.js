@@ -360,23 +360,26 @@ module.exports = {
 			},
 		},
 
-		retrieveAuthenticatedUser: {
-			rest: 'GET /refresh/user',
+		updateUserName: {
+			rest: 'PUT /users/name',
+			params: {
+				username: 'string',
+			},
 			auth: 'required',
 			async handler(ctx) {
 				const userId = ctx.meta.userID
 
-				const user = await this.adapter.findOne({
-					userId,
+				let user = await this.adapter.findOne({
+					_id: userId,
+				})
+
+				let updatedUser = await this.adapter.updateById(user._id, {
+					...user,
+					username: ctx.params.username,
 				})
 
 				return {
-					user: {
-						_id: user._id,
-						username: user.username,
-						email: user.email,
-						handler: user.handler,
-					},
+					username: updatedUser.username,
 				}
 			},
 		},
