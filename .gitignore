@@ -9,3 +9,4 @@ data/
 db/
 
 .env
+sendgrid.env

@@ -5,7 +5,6 @@ const nodemailer = require('nodemailer')
 const path = require('path')
 const fs = require('fs')
 const handlebars = require('handlebars')
-const otpGenerator = require('otp-generator')
 const crypto = require('crypto')
 
 module.exports = {
@@ -14,30 +13,35 @@ module.exports = {
 	settings: {
 		from: null,
 		transport: {
-			service: 'gmail',
+			host: process.env.EMAIL_SERVER,
+			port:
+				process.env.NODE_ENV === 'production'
+					? process.env.EMAIL_PORTS_SSL
+					: process.env.EMAIL_PORTS_TLS,
+			secure: process.env.NODE_ENV === 'production',
 			auth: {
-				user: 'trystsplatform@gmail.com',
-				pass: 'ffwlkwaialrtbsoz',
+				user: process.env.EMAIL_AUTH_USER,
+				pass: process.env.EMAIL_AUTH_PASS,
 			},
-			email: {
-				otp: {
-					headers: [
-						'Woohoo, can’t wait to see you 😆',
-						"It's Trystsin' time! 😮",
-						'Test1',
-						'Test2',
-						'Test3',
-					],
-					firstLines: [
-						'Just one more step before jump into Trysts, feel free to use the lucky number below to start with us.',
-						"The following magic number will lead you one step closer to Trysts, but remind yourself before you decide. You don't know what's coming (it will be fun).",
-						'Test1',
-						'Test2',
-						'Test3',
-						'Test4',
-						'Test5',
-					],
-				},
+		},
+		email: {
+			otp: {
+				headers: [
+					'Woohoo, can’t wait to see you 😆',
+					"It's Trystsin' time! 😮",
+					'Test1',
+					'Test2',
+					'Test3',
+				],
+				firstLines: [
+					'Just one more step before jump into Trysts, feel free to use the lucky number below to start with us.',
+					"The following magic number will lead you one step closer to Trysts, but remind yourself before you decide. You don't know what's coming (it will be fun).",
+					'Test1',
+					'Test2',
+					'Test3',
+					'Test4',
+					'Test5',
+				],
 			},
 		},
 	},
@@ -69,14 +73,12 @@ module.exports = {
 				const template = handlebars.compile(source)
 
 				const header =
-					this.settings.transport.email.otp.headers[
-						crypto.randomInt(this.settings.transport.email.otp.headers.length)
+					this.settings.email.otp.headers[
+						crypto.randomInt(this.settings.email.otp.headers.length)
 					]
 				const firstLine =
-					this.settings.transport.email.otp.firstLines[
-						crypto.randomInt(
-							this.settings.transport.email.otp.firstLines.length
-						)
+					this.settings.email.otp.firstLines[
+						crypto.randomInt(this.settings.email.otp.firstLines.length)
 					]
 
 				const replacements = {
@@ -87,11 +89,12 @@ module.exports = {
 
 				const htmlToSend = template(replacements)
 
+				// TODO: Improve UX Writing
 				let mailOptions = {
-					from: '"sonhaaa at Trysts ✨" <trystsplatform@gmail.com>',
+					from: '"Trysts OTP ✨" <noreply@trysts.io>',
 					to,
-					subject: 'Heyyy',
-					text: 'That was easy!',
+					subject: "Trysts's login OTP",
+					text: 'One more step to jump into Trysts!',
 					html: htmlToSend,
 				}
 
