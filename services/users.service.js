@@ -309,23 +309,10 @@ module.exports = {
 							},
 						])
 					} else {
-						const { accessToken, refreshToken } = await this.generateJWT(email)
-
-						await this.adapter.updateById(user._id, {
-							...user,
-							accessToken,
-							// refreshToken,
-						})
+						const { accessToken } = await this.generateJWT(email)
 
 						return {
-							user: {
-								_id: user._id,
-								username: user.username,
-								email: user.email,
-								handler: user.handler,
-							},
 							accessToken,
-							// refreshToken,
 						}
 					}
 				} catch (err) {
@@ -336,6 +323,36 @@ module.exports = {
 						},
 					])
 				}
+			},
+		},
+
+		/**
+		 * Get current user entity.
+		 * Auth is required!
+		 *
+		 * @actions
+		 *
+		 * @returns {Object} User entity
+		 */
+		me: {
+			auth: 'required',
+			rest: 'GET /user',
+			cache: {
+				keys: ['#userID', 'handler', 'username', 'email'],
+			},
+			async handler(ctx) {
+				const user = await this.getById(ctx.meta.user._id)
+				if (!user) throw new MoleculerClientError('User not found!', 400)
+
+				const doc = await this.transformDocuments(
+					ctx,
+					{
+						fields: ['_id', 'email', 'username', 'handler'],
+					},
+					user
+				)
+
+				return doc
 			},
 		},
 

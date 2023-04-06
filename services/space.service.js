@@ -25,7 +25,7 @@ module.exports = {
 			author: {
 				action: 'users.get',
 				params: {
-					fields: 'username',
+					fields: '_id username',
 				},
 			},
 		},
@@ -104,7 +104,7 @@ module.exports = {
 		 *
 		 */
 		update: {
-			// auth: 'required', // turn off for testing
+			auth: 'required', // turn off for testing
 			rest: 'PUT /spaces/:id',
 			params: {
 				space: {
@@ -211,13 +211,20 @@ module.exports = {
 				const userId = ctx.params.id
 
 				try {
-					const spaces = await this.adapter.find({ query: { author: userId } })
+					let params = {
+						populate: ['author'],
+						query: { author: userId },
+					}
+
+					const spaces = await this.adapter.find(params)
 
 					if (!spaces) {
 						throw new MoleculerClientError('Spaces not found', 404, 'NOT_FOUND')
 					}
 
-					return spaces
+					const docs = await this.transformDocuments(ctx, params, spaces)
+
+					return docs
 				} catch (error) {
 					throw new MoleculerClientError(error.message, 422, '', [
 						{
@@ -230,11 +237,13 @@ module.exports = {
 		},
 
 		list: {
+			auth: 'required',
 			rest: 'GET /spaces',
 			async handler(ctx) {
 				let params = {
 					populate: ['author'],
 				}
+
 				const spaces = await this.adapter.find()
 
 				if (!spaces) {
@@ -248,6 +257,7 @@ module.exports = {
 		},
 
 		get: {
+			auth: 'required',
 			rest: 'GET /spaces/:id',
 		},
 
