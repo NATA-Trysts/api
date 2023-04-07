@@ -21,7 +21,23 @@ module.exports = {
 
 		randomAdjective: ['Red', 'Green', 'Blue', 'Yellow', 'Purple', 'Orange'],
 
-		fields: ['_id', 'username', 'email', 'handler', 'refreshToken'],
+		fields: [
+			'_id',
+			'username',
+			'email',
+			'handler',
+			'refreshToken',
+			'collections',
+		],
+
+		populates: {
+			collections: {
+				action: 'collections.get',
+				params: {
+					fields: '_id name price title',
+				},
+			},
+		},
 
 		entityValidator: {
 			username: { type: 'string', min: 2, max: 15 },
@@ -323,6 +339,31 @@ module.exports = {
 						},
 					])
 				}
+			},
+		},
+
+		addCollection: {
+			rest: 'POST /users/collections',
+			params: {
+				collection: 'string',
+			},
+			auth: 'required',
+			async handler(ctx) {
+				const collection = ctx.params.collection
+
+				ctx.meta.collection = collection
+
+				const json = await this.adapter
+					.updateById(ctx.meta.userID, {
+						$push: { collections: collection },
+					})
+					.then((json) =>
+						this.entityChanged('updated.collections', json, ctx).then(
+							() => json
+						)
+					)
+
+				return { collections: json.collections }
 			},
 		},
 
