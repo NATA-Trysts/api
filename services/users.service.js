@@ -21,7 +21,23 @@ module.exports = {
 
 		randomAdjective: ['Red', 'Green', 'Blue', 'Yellow', 'Purple', 'Orange'],
 
-		fields: ['_id', 'username', 'email', 'handler', 'refreshToken'],
+		fields: [
+			'_id',
+			'username',
+			'email',
+			'handler',
+			'refreshToken',
+			'collections',
+		],
+
+		populates: {
+			collections: {
+				action: 'collections.get',
+				params: {
+					fields: '_id name price title',
+				},
+			},
+		},
 
 		entityValidator: {
 			username: { type: 'string', min: 2, max: 15 },
@@ -295,23 +311,10 @@ module.exports = {
 							},
 						])
 					} else {
-						const { accessToken, refreshToken } = await this.generateJWT(email)
-
-						await this.adapter.updateById(user._id, {
-							...user,
-							accessToken,
-							// refreshToken,
-						})
+						const { accessToken } = await this.generateJWT(email)
 
 						return {
-							user: {
-								_id: user._id,
-								username: user.username,
-								email: user.email,
-								handler: user.handler,
-							},
 							accessToken,
-							// refreshToken,
 						}
 					}
 				} catch (err) {
@@ -322,6 +325,61 @@ module.exports = {
 						},
 					])
 				}
+			},
+		},
+
+		addCollection: {
+			rest: 'POST /users/collections',
+			params: {
+				collection: 'string',
+			},
+			auth: 'required',
+			async handler(ctx) {
+				const collection = ctx.params.collection
+
+				ctx.meta.collection = collection
+
+				const json = await this.adapter
+					.updateById(ctx.meta.userID, {
+						$push: { collections: collection },
+					})
+					.then((json) =>
+						this.entityChanged('updated.collections', json, ctx).then(
+							() => json
+						)
+					)
+
+				return { collections: json.collections }
+			},
+		},
+
+		/**
+		 * Get current user entity.
+		 * Auth is required!
+		 *
+		 * @actions
+		 *
+		 * @returns {Object} User entity
+		 */
+		me: {
+			auth: 'required',
+			rest: 'GET /user',
+			cache: {
+				keys: ['#userID', 'handler', 'username', 'email'],
+			},
+			async handler(ctx) {
+				const user = await this.getById(ctx.meta.user._id)
+				if (!user) throw new MoleculerClientError('User not found!', 400)
+
+				const doc = await this.transformDocuments(
+					ctx,
+					{
+						fields: ['_id', 'email', 'username', 'handler'],
+					},
+					user
+				)
+
+				return doc
 			},
 		},
 

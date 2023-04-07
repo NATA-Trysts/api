@@ -21,13 +21,24 @@ module.exports = {
 		HMS_APP_SECRET: process.env.HMS_APP_SECRET,
 		HMS_TEMPLATE_ID: process.env.HMS_TEMPLATE_ID,
 
+		populates: {
+			author: {
+				action: 'users.get',
+				params: {
+					fields: '_id username',
+				},
+			},
+		},
+
 		fields: [
 			'_id',
 			'name',
 			'code',
 			'password',
-			'ownerId',
-			'updatedAt',
+			'author',
+			'latestEdited',
+			'thumbnail',
+			'category',
 			'hmsRoomId',
 			'models',
 		],
@@ -93,7 +104,7 @@ module.exports = {
 		 *
 		 */
 		update: {
-			// auth: 'required', // turn off for testing
+			auth: 'required', // turn off for testing
 			rest: 'PUT /spaces/:id',
 			params: {
 				space: {
@@ -108,7 +119,7 @@ module.exports = {
 			async handler(ctx) {
 				let newSpace = ctx.params.space
 
-				newSpace.updatedAt = Date.now()
+				newSpace.latestEdited = Date.now()
 
 				try {
 					const space = await this.adapter.findById(ctx.params.id)
@@ -117,7 +128,7 @@ module.exports = {
 						throw new MoleculerClientError('Space not found', 404, 'NOT_FOUND')
 					}
 
-					if (space.ownerId !== ctx.meta.user._id) {
+					if (space.author !== ctx.meta.user._id) {
 						throw new MoleculerClientError(
 							'You are not the owner of this space',
 							403,
@@ -194,11 +205,59 @@ module.exports = {
 			},
 		},
 
+		getSpacesByUserId: {
+			rest: 'GET /spaces/user/:id',
+			async handler(ctx) {
+				const userId = ctx.params.id
+
+				try {
+					let params = {
+						populate: ['author'],
+						query: { author: userId },
+					}
+
+					const spaces = await this.adapter.find(params)
+
+					if (!spaces) {
+						throw new MoleculerClientError('Spaces not found', 404, 'NOT_FOUND')
+					}
+
+					const docs = await this.transformDocuments(ctx, params, spaces)
+
+					return docs
+				} catch (error) {
+					throw new MoleculerClientError(error.message, 422, '', [
+						{
+							field: 'getSpacesByUserId',
+							message: error.message,
+						},
+					])
+				}
+			},
+		},
+
 		list: {
+			auth: 'required',
 			rest: 'GET /spaces',
+			async handler(ctx) {
+				let params = {
+					populate: ['author'],
+				}
+
+				const spaces = await this.adapter.find()
+
+				if (!spaces) {
+					throw new MoleculerClientError('Spaces not found', 404, 'NOT_FOUND')
+				}
+
+				const docs = await this.transformDocuments(ctx, params, spaces)
+
+				return docs
+			},
 		},
 
 		get: {
+			auth: 'required',
 			rest: 'GET /spaces/:id',
 		},
 
@@ -254,17 +313,30 @@ module.exports = {
 			return spaceCode
 		},
 
+		formatNameForHMS(name) {
+			// format the name to format: xxx-xxx-xxx
+			const formattedName = name.replace(/\s+/g, '-').toLowerCase()
+
+			return formattedName
+		},
+
 		async createNewSpace(name, password, model, ctx) {
-			const hmsRoom = await this.createHMSRoom()
+			const hmsRoom = await this.createHMSRoom(name)
+
+			// TEMP CATEGORY
+			const categories = ['offices', 'families']
 
 			const newSpace = await this.adapter.insert({
 				name: name,
 				code: this.generateSpaceCode(),
 				password: password || '',
-				ownerId: ctx.meta.user._id,
-				// ownerId: 'BQtRhzzby4NyFefF',
-				updatedAt: Date.now(),
+				author: ctx.meta.user._id,
+				// author: 'pPJJWmWn1oqOoELs',
+				latestEdited: Date.now(),
+				thumbnail:
+					'https://hips.hearstapps.com/hmg-prod/images/womanyellingcat-1573233850.jpg',
 				model: model,
+				category: categories[Math.floor(Math.random() * categories.length)],
 				hmsRoomId: hmsRoom.id,
 			})
 			const space = await this.transformDocuments(ctx, {}, newSpace)
@@ -275,7 +347,7 @@ module.exports = {
 
 		generateHMSToken() {
 			const appAccessToken = this.settings.HMS_ACCESS_TOKEN
-			const appSecret = this.settings.HMS_APP_SECRET
+			const appSecret = `${this.settings.HMS_APP_SECRET}=`
 
 			const payload = {
 				access_key: appAccessToken,
@@ -297,12 +369,13 @@ module.exports = {
 		createHMSRoom(name) {
 			const managementToken = this.generateHMSToken()
 			const templateId = this.settings.HMS_TEMPLATE_ID
+			const hmsRoomName = this.formatNameForHMS(name)
 
 			return axios
 				.post(
 					'https://api.100ms.live/v2/rooms',
 					{
-						name: `${name}-${Date.now()}`,
+						name: `${hmsRoomName}-${Date.now()}`,
 						description: 'Dummy description',
 						template_id: templateId,
 						region: 'us',

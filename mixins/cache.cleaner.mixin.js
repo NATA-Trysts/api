@@ -1,4 +1,4 @@
-"use strict"
+'use strict'
 
 module.exports = function (eventNames) {
 	const events = {}
@@ -16,4 +16,3 @@ module.exports = function (eventNames) {
 		events,
 	}
 }
-
