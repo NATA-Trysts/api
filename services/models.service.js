@@ -1,4 +1,5 @@
-const { randomInt } = require('crypto')
+'use strict'
+
 const { faker } = require('@faker-js/faker')
 const DbService = require('../mixins/db.mixin')
 
@@ -79,10 +80,7 @@ module.exports = {
 						return [...modelDatas, ...current]
 					}, [])
 
-				const doc = await this.adapter.insertMany(modelSeedDatas)
-				// const models = await this.transformDocuments(ctx, {}, doc)
-
-				// return models
+				await this.adapter.insertMany(modelSeedDatas)
 			},
 		},
 

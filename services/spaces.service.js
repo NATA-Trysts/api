@@ -347,7 +347,7 @@ module.exports = {
 
 		generateHMSToken() {
 			const appAccessToken = this.settings.HMS_ACCESS_TOKEN
-			const appSecret = `${this.settings.HMS_APP_SECRET}=`
+			const appSecret = this.settings.HMS_APP_SECRET
 
 			const payload = {
 				access_key: appAccessToken,

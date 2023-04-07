@@ -1,7 +1,8 @@
+'use strict'
+
 const { randomInt } = require('crypto')
 const DbService = require('../mixins/db.mixin')
 const { faker } = require('@faker-js/faker')
-const CacheCleanerMixin = require('../mixins/cache.cleaner.mixin')
 
 module.exports = {
 	name: 'collections',
