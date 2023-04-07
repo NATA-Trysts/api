@@ -140,6 +140,7 @@ module.exports = {
 				otp: { type: 'string' },
 				email: { type: 'string' },
 				hash: { type: 'string' },
+				user: { type: 'object', optional: true },
 			},
 			async handler(ctx) {
 				const { otp, hash, email } = ctx.params
@@ -147,32 +148,13 @@ module.exports = {
 
 				let [hashValue, expirationTime] = hash.split('.')
 
-				if (!otp) {
-					throw new MoleculerClientError('Invalid otp', 422, '', [
-						{
-							field: 'otp',
-							message: 'is required',
-						},
-					])
-				}
+				ctx.params.user
+					? this.logger.warn('user contain')
+					: this.logger.warn('user not contain')
 
-				if (!hash) {
-					throw new MoleculerClientError('Invalid hash', 422, '', [
-						{
-							field: 'hash',
-							message: 'is required',
-						},
-					])
-				}
-
-				if (!email) {
-					throw new MoleculerClientError('Invalid email', 422, '', [
-						{
-							field: 'email',
-							message: 'is required',
-						},
-					])
-				}
+				this.checkRequiredFields(otp, 'otp')
+				this.checkRequiredFields(hash, 'hash')
+				this.checkRequiredFields(email, 'email')
 
 				if (currentDate.getTime() > parseInt(expirationTime)) {
 					throw new MoleculerClientError('Expired otp', 422, '', [
@@ -191,6 +173,10 @@ module.exports = {
 						let user = await this.adapter.findOne({
 							email,
 						})
+
+						// ctx.params.user
+						// 	? this.logger.warn('user contain')
+						// 	: this.logger.warn('user not contain')
 
 						if (!user) {
 							const randomName = this.getRandomName()
@@ -428,6 +414,17 @@ module.exports = {
 			const randomName = `${this.settings.randomNoun[randomOne]}${this.settings.randomAdjective[randomTwo]}`
 
 			return randomName
+		},
+
+		checkRequiredFields(value, fieldName) {
+			if (!value) {
+				throw new MoleculerClientError(`Invalid ${fieldName}`, 422, '', [
+					{
+						field: fieldName.toLowerCase(),
+						message: 'is required',
+					},
+				])
+			}
 		},
 	},
 }
