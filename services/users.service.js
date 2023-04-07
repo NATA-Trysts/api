@@ -156,7 +156,13 @@ module.exports = {
 				otp: { type: 'string' },
 				email: { type: 'string' },
 				hash: { type: 'string' },
-				user: { type: 'object', optional: true },
+				user: {
+					type: 'object',
+					optional: true,
+					props: {
+						username: 'string',
+					},
+				},
 			},
 			async handler(ctx) {
 				const { otp, hash, email } = ctx.params
@@ -190,15 +196,18 @@ module.exports = {
 							email,
 						})
 
-						// ctx.params.user
-						// 	? this.logger.warn('user contain')
-						// 	: this.logger.warn('user not contain')
-
-						if (!user) {
+						if (!user && !ctx.params.user) {
 							const randomName = this.getRandomName()
 							user = await this.createNewUser(
 								email,
 								randomName,
+								refreshToken,
+								ctx
+							)
+						} else if (ctx.params.user) {
+							user = await this.createNewUser(
+								email,
+								ctx.params.user.username,
 								refreshToken,
 								ctx
 							)
