@@ -28,6 +28,7 @@ module.exports = {
 			'handler',
 			'refreshToken',
 			'collections',
+			'avatar',
 		],
 
 		populates: {
@@ -374,7 +375,7 @@ module.exports = {
 			auth: 'required',
 			rest: 'GET /user',
 			cache: {
-				keys: ['#userID', 'handler', 'username', 'email'],
+				keys: ['#userID', 'handler', 'username', 'email', 'avatar'],
 			},
 			async handler(ctx) {
 				const user = await this.getById(ctx.meta.user._id)
@@ -383,7 +384,7 @@ module.exports = {
 				const doc = await this.transformDocuments(
 					ctx,
 					{
-						fields: ['_id', 'email', 'username', 'handler'],
+						fields: ['_id', 'email', 'username', 'handler', 'avatar'],
 					},
 					user
 				)
@@ -401,6 +402,7 @@ module.exports = {
 		},
 
 		update: {
+			auth: 'required',
 			rest: 'PUT /users/:id',
 		},
 
@@ -459,11 +461,23 @@ module.exports = {
 		 *z
 		 */
 		async createNewUser(email, username, refreshToken, ctx) {
+			const avatar = {
+				skin: [],
+				hair: [],
+				upper: [],
+				lower: [],
+				shoe: [],
+				accessory: [],
+				tattoo: [],
+				image: 'https://i.pravatar.cc/500',
+			}
+
 			const entity = {
 				username: username,
 				email: email,
 				handler: username + '#' + Math.floor(1000 + Math.random() * 9000),
 				refreshToken: refreshToken,
+				avatar: avatar,
 			}
 
 			const doc = await this.adapter.insert(entity)
