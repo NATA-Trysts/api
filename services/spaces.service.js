@@ -60,7 +60,7 @@ module.exports = {
 		 * @returns {Object} Created space
 		 */
 		create: {
-			// auth: 'required', // turn off for testing
+			auth: 'required', // turn off for testing
 			rest: 'POST /spaces',
 			params: {
 				name: { type: 'string', min: 2 },
@@ -198,6 +198,69 @@ module.exports = {
 					throw new MoleculerClientError(error.message, 422, '', [
 						{
 							field: 'join',
+							message: error.message,
+						},
+					])
+				}
+			},
+		},
+
+		getSpaceByCode: {
+			rest: 'GET /spaces/code/:code',
+			async handler(ctx) {
+				const code = ctx.params.code
+
+				try {
+					const space = await this.adapter.findOne({ code: code })
+
+					if (!space) {
+						throw new MoleculerClientError('Space not found', 404, 'NOT_FOUND')
+					}
+
+					return space
+				} catch (error) {
+					throw new MoleculerClientError(error.message, 422, '', [
+						{
+							field: 'getSpaceByCode',
+							message: error.message,
+						},
+					])
+				}
+			},
+		},
+
+		verifySpacePassword: {
+			rest: 'POST /spaces/verify',
+			params: {
+				code: { type: 'string', min: 8, max: 8 },
+				password: { type: 'string' },
+			},
+			async handler(ctx) {
+				const { code, password } = ctx.params
+
+				try {
+					const space = await this.adapter.findOne({ code: code })
+
+					if (!space) {
+						throw new MoleculerClientError('Space not found', 404, 'NOT_FOUND')
+					}
+
+					if (space.password) {
+						if (space.password !== password) {
+							throw new MoleculerClientError(
+								'Incorrect password',
+								422,
+								'INCORRECT_PASSWORD'
+							)
+						}
+					}
+
+					// return space
+					return true
+				} catch (error) {
+					throw new MoleculerClientError(error.message, 422, '', [
+						{
+							field: 'verifySpacePassword',
 							message: error.message,
 						},
 					])
@@ -347,7 +410,9 @@ module.exports = {
 
 		generateHMSToken() {
 			const appAccessToken = this.settings.HMS_ACCESS_TOKEN
-			const appSecret = this.settings.HMS_APP_SECRET
+			// const appSecret = this.settings.HMS_APP_SECRET
+			const appSecret =
+				'TNGLcZVO3NeuOAxvo5pp7Pk7sbDFVmie7AB_ACZ_oN1i4oCkxsJB1XpQGO07vRK06KF4iJXExccYMK0fw6fnP1Ptvdf2H4y4vLaL2lS6iaS4rsglVIytWoe10dUrJMqPRjpKV1C7Q9soEJlJM6Du8KXLVZFqixpXttFodX9KsuA='
 
 			const payload = {
 				access_key: appAccessToken,
