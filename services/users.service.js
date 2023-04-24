@@ -214,8 +214,9 @@ module.exports = {
 							)
 						} else {
 							user = await this.adapter.updateById(user._id, {
-								...user,
-								refreshToken,
+								$set: {
+									refreshToken,
+								},
 							})
 						}
 
