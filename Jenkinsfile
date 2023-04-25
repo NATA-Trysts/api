@@ -20,7 +20,7 @@ pipeline {
 				script {
 					sh '''
 						sudo apt-get update
-						sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
+						sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 					'''
 				}
 			}
@@ -38,7 +38,7 @@ pipeline {
 					// docker network create -o "com.docker.network.bridge.host_binding_ipv4"="${hostIP}" my-network
                     // docker build --network my-network -t app .
                     sh """
-                        docker build -t trysts/api:$GIT_HASH .
+                       sudo docker build -t trysts/api:$GIT_HASH .
                     """
                 }
             }
