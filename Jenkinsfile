@@ -19,6 +19,7 @@ pipeline {
 			steps {
 				script {
 					sh '''
+						sudo -i
 						apt-get update
 						apt-get install \
 							ca-certificates \
