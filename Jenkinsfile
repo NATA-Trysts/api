@@ -3,6 +3,18 @@
 def credentialsId = 'aws_credentials'
 def region = 'ap-southeast-1'
 def clusterName ='tryst-be-cluster'
+
+def gitCheckoutK8sRepo() {
+	sh "git config --global credential.helper cache"
+	checkout( scm: [$class: 'GitSCM',
+		branches: [[name: 'main']],
+		extensions: [[$class: 'RelativeTargetDirectory',
+		relativeTargetDir: 'k8s-deployment']],
+		userRemoteConfigs: [[credentialsId: '49af3984-8fb6-47f4-bd97-ef161c311d66', url: "https://github.com/NATA-Trysts/k8s-deployment.git"]]],
+	changelog: false,
+	poll: false ) }
+
+
 pipeline {
 
     agent any
@@ -72,7 +84,11 @@ pipeline {
 
         stage ('Deploy') {
             steps {
-                deployImage('api',credentialsId,clusterName,region,GIT_HASH)
+				script {
+					gitCheckoutK8sRepo()
+					sh "pwd"
+                	deployImage('api',credentialsId,clusterName,region,GIT_HASH)
+				}
             }
         }
     }
