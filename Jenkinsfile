@@ -1,11 +1,8 @@
 @Library('shared-library@master') _
 
-// def credentialsId = 'aws_credentials'
-// def accountID = params.AWS_ACCOUNT_ID
-// def repoName = params.IMAGE_REPO_NAME
-// def region = params.region
-// def clusterName = params.CLUSTER_NAME
-
+def credentialsId = 'aws_credentials'
+def region = 'ap-southeast-1'
+def clusterName ='tryst-be-cluster'
 pipeline {
 
     agent any
@@ -50,11 +47,11 @@ pipeline {
             }
         }
 
-        // stage ('Deploy') {
-        //     steps {
-        //         deployImg(credentialsId,clusterName,region,GIT_HASH)
-        //     }
-        // }
+        stage ('Deploy') {
+            steps {
+                deployImg(credentialsId,clusterName,region,GIT_HASH)
+            }
+        }
     }
 
 
