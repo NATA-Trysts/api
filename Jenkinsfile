@@ -1,4 +1,4 @@
-@Library('shared-library')_
+@Library('shared-library@master') _
 
 // def credentialsId = 'aws_credentials'
 // def accountID = params.AWS_ACCOUNT_ID
