@@ -49,7 +49,7 @@ pipeline {
 
         stage ('Deploy') {
             steps {
-                deployImg(credentialsId,clusterName,region,GIT_HASH)
+                deployImg('api',credentialsId,clusterName,region,GIT_HASH)
             }
         }
     }
