@@ -1,1 +1,1 @@
-api for trysts.ioo
+api for trysts.iooo
