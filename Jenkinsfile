@@ -1,6 +1,6 @@
 @Library('shared-library')_
 
-def credentialsId = params.AWS_CREDENTIAL_ID
+// def credentialsId = 'aws_credentials'
 // def accountID = params.AWS_ACCOUNT_ID
 // def repoName = params.IMAGE_REPO_NAME
 // def region = params.region
