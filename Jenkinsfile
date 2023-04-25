@@ -85,7 +85,7 @@ pipeline {
         stage ('Deploy') {
             steps {
 				script {
-					gitCheckoutK8sRepo()
+					// gitCheckoutK8sRepo()
 					sh "pwd"
                 	deployImage('api',credentialsId,clusterName,region,GIT_HASH)
 				}
