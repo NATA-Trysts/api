@@ -18,7 +18,7 @@ pipeline {
 		stage ('Install docker') {
 			steps {
 				script {
-					sh """
+					sh '''
 						sudo apt-get update
 						sudo apt-get install \
 							ca-certificates \
@@ -36,7 +36,7 @@ pipeline {
 
 						sudo apt-get update
 						sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-					"""
+					'''
 				}
 			}
 		}
