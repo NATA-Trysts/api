@@ -12,12 +12,34 @@ pipeline {
     }
 
     stages {
-		stage ('Install docker') {
+		stage ('Prepare Environment') {
 			steps {
 				script {
 					sh '''
+						echo Preparing Install Docker
 						sudo apt-get update
 						sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+						echo DONE INSTALL DOCKER
+						echo --------------------------------------------------------------------------------
+
+						echo Preparing Install AWS CLI
+						curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+						unzip awscliv2.zip
+						sudo ./aws/install
+						echo Done Install AWS CLI
+						echo --------------------------------------------------------------------------------
+
+						echo Preparing Install kubectl
+						curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+						curl -LO "https://dl.k8s.io/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl.sha256"
+						echo "$(cat kubectl.sha256)  kubectl" | sha256sum --check
+						sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+						chmod +x kubectl
+						mkdir -p ~/.local/bin
+						mv ./kubectl ~/.local/bin/kubectl
+						kubectl version --client
+						echo Done Install kubectl
+						echo --------------------------------------------------------------------------------
 					'''
 				}
 			}
