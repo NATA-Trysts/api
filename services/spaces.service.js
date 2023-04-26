@@ -38,7 +38,7 @@ module.exports = {
 			'author',
 			'latestEdited',
 			'thumbnail',
-			'category',
+			'theme',
 			'hmsRoomId',
 			'models',
 		],
@@ -65,7 +65,14 @@ module.exports = {
 			params: {
 				name: { type: 'string', min: 2 },
 				password: { type: 'string', optional: true },
-				models: { type: 'array' },
+				models: { type: 'array', optional: true },
+				theme: [
+					{
+						type: 'enum',
+						values: ['home', 'forest', 'city', 'kidsplayground'],
+					},
+					{ type: 'boolean' },
+				],
 			},
 			async handler(ctx) {
 				const entity = ctx.params
@@ -76,6 +83,7 @@ module.exports = {
 						entity.name,
 						entity.password,
 						entity.model,
+						entity.theme,
 						ctx
 					)
 
@@ -383,23 +391,19 @@ module.exports = {
 			return formattedName
 		},
 
-		async createNewSpace(name, password, model, ctx) {
+		async createNewSpace(name, password, model, theme, ctx) {
 			const hmsRoom = await this.createHMSRoom(name)
-
-			// TEMP CATEGORY
-			const categories = ['offices', 'families']
 
 			const newSpace = await this.adapter.insert({
 				name: name,
 				code: this.generateSpaceCode(),
 				password: password || '',
 				author: ctx.meta.user._id,
-				// author: 'pPJJWmWn1oqOoELs',
 				latestEdited: Date.now(),
 				thumbnail:
 					'https://hips.hearstapps.com/hmg-prod/images/womanyellingcat-1573233850.jpg',
 				model: model,
-				category: categories[Math.floor(Math.random() * categories.length)],
+				theme: theme,
 				hmsRoomId: hmsRoom.id,
 			})
 			const space = await this.transformDocuments(ctx, {}, newSpace)
