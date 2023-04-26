@@ -61,14 +61,6 @@ pipeline {
         stage('Build') {
             steps {
                 script {
-                    // hostIP = sh (
-                    //     script: """
-                    //         hostname -I
-                    //     """,
-                    //     returnStdout: true
-                    // ).trim()
-					// docker network create -o "com.docker.network.bridge.host_binding_ipv4"="${hostIP}" my-network
-                    // docker build --network my-network -t app .
                     sh """
                        sudo docker build -t trysts/api:$GIT_HASH .
                     """
@@ -85,7 +77,10 @@ pipeline {
         stage ('Deploy') {
             steps {
 				script {
-					// gitCheckoutK8sRepo()
+					sh """
+						cd ./k8s-deployment
+						git pull origin main
+					"""
 					sh "pwd"
                 	deployImage('api',credentialsId,clusterName,region,GIT_HASH)
 				}
