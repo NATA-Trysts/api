@@ -1,1 +1,1 @@
-api for trysts.iooo
+api for trysts.io
