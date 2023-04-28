@@ -26,21 +26,10 @@ module.exports = {
 		},
 		email: {
 			otp: {
-				headers: [
-					'Woohoo, can’t wait to see you 😆',
-					"It's Trystsin' time! 😮",
-					'Test1',
-					'Test2',
-					'Test3',
-				],
+				headers: ['Woohoo, can’t wait to see you 😆', "It's Trysts' time! 😮"],
 				firstLines: [
 					'Just one more step before jump into Trysts, feel free to use the lucky number below to start with us.',
-					"The following magic number will lead you one step closer to Trysts, but remind yourself before you decide. You don't know what's coming (it will be fun).",
-					'Test1',
-					'Test2',
-					'Test3',
-					'Test4',
-					'Test5',
+					"The following magic number will lead you one step closer to Trysts. You don't know what's coming (it will be fun).",
 				],
 			},
 		},
@@ -91,9 +80,9 @@ module.exports = {
 
 				// TODO: Improve UX Writing
 				let mailOptions = {
-					from: '"Trysts OTP ✨" <noreply@trysts.io>',
+					from: '"Trysts" <noreply@trysts.io>',
 					to,
-					subject: "Trysts's login OTP",
+					subject: `${otp} is your Trysts's login OTP ✨`,
 					text: 'One more step to jump into Trysts!',
 					html: htmlToSend,
 				}
