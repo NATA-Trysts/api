@@ -121,6 +121,7 @@ module.exports = {
 						name: { type: 'string', min: 2, optional: true },
 						password: { type: 'string', optional: true },
 						models: { type: 'array', optional: true },
+						thumbnail: { type: 'string', optional: true },
 					},
 				},
 			},
