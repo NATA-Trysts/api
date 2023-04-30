@@ -336,6 +336,7 @@ module.exports = {
 		},
 
 		remove: {
+			auth: 'required',
 			rest: 'DELETE /spaces/:id',
 		},
 
