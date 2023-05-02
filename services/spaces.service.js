@@ -139,7 +139,7 @@ module.exports = {
 						throw new MoleculerClientError('Space not found', 404, 'NOT_FOUND')
 					}
 
-					if (space.author !== ctx.meta.user._id) {
+					if (space.author !== ctx.meta.user._id.toString()) {
 						throw new MoleculerClientError(
 							'You are not the owner of this space',
 							403,
@@ -402,7 +402,7 @@ module.exports = {
 				name: name,
 				code: this.generateSpaceCode(),
 				password: password || '',
-				author: ctx.meta.user._id,
+				author: ctx.meta.user._id.toString(),
 				latestEdited: Date.now(),
 				thumbnail: 'https://i.ibb.co/F7k9h9X/bg.png',
 				model: model,
