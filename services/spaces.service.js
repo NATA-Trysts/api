@@ -405,7 +405,7 @@ module.exports = {
 				author: ctx.meta.user._id.toString(),
 				latestEdited: Date.now(),
 				thumbnail: 'https://i.ibb.co/F7k9h9X/bg.png',
-				model: model,
+				models: model,
 				theme: theme,
 				hmsRoomId: hmsRoom.id,
 			})
