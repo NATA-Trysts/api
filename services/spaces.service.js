@@ -38,6 +38,7 @@ module.exports = {
 			'author',
 			'latestEdited',
 			'thumbnail',
+			'backgroundMusic',
 			'theme',
 			'hmsRoomId',
 			'models',
@@ -121,6 +122,8 @@ module.exports = {
 						name: { type: 'string', min: 2, optional: true },
 						password: { type: 'string', optional: true },
 						models: { type: 'array', optional: true },
+						thumbnail: { type: 'string', optional: true },
+						backgroundMusic: { type: 'string', optional: true },
 					},
 				},
 			},
@@ -333,6 +336,7 @@ module.exports = {
 		},
 
 		remove: {
+			auth: 'required',
 			rest: 'DELETE /spaces/:id',
 		},
 
@@ -400,8 +404,7 @@ module.exports = {
 				password: password || '',
 				author: ctx.meta.user._id,
 				latestEdited: Date.now(),
-				thumbnail:
-					'https://hips.hearstapps.com/hmg-prod/images/womanyellingcat-1573233850.jpg',
+				thumbnail: 'https://i.ibb.co/F7k9h9X/bg.png',
 				model: model,
 				theme: theme,
 				hmsRoomId: hmsRoom.id,
