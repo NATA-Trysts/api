@@ -50,7 +50,14 @@ module.exports = {
 
 				// Set CORS headers
 				cors: {
-					origin: ['http://127.0.0.1:5173', 'http://localhost:5173'],
+					origin: [
+						'http://127.0.0.1:5173',
+						'http://localhost:5173',
+						'https://app.trysts.io/',
+						'http://app.trysts.io/',
+						'https://www.app.trysts.io/',
+						'http://www.app.trysts.io/',
+					],
 					methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'DELETE'],
 					allowedHeaders: [
 						'Authorization',
